@@ -203,6 +203,15 @@
   color: var(--color-muted);
 }
 
+.field__error {
+  font-size: var(--text-sm);
+  color: var(--color-error);
+}
+
+.field--error .field__label {
+  color: var(--color-error);
+}
+
 .checkbox {
   display: inline-flex;
   align-items: flex-start;
@@ -249,6 +258,13 @@
 
 .select {
   appearance: none;
+}
+
+.input--error,
+.select--error,
+.textarea--error {
+  border-color: rgba(200, 58, 58, 0.7);
+  box-shadow: 0 0 0 4px rgba(200, 58, 58, 0.08);
 }
 
 .textarea {
@@ -493,6 +509,37 @@
   box-shadow: var(--shadow-lg);
 }
 
+.dialog--lg {
+  width: min(100%, 920px);
+}
+
+.dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.dialog__title {
+  margin: 0;
+}
+
+.dialog__description {
+  margin: 0.35rem 0 0;
+  color: var(--color-muted);
+}
+
+.dialog__form {
+  display: grid;
+  gap: 1rem;
+}
+
+.dialog__content {
+  display: grid;
+  gap: 1rem;
+}
+
 .dialog__actions {
   display: flex;
   justify-content: flex-end;
@@ -630,6 +677,21 @@
   border-radius: 999px;
   box-shadow: var(--shadow-md);
   z-index: 40;
+}
+
+.toast-stack {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  display: grid;
+  gap: 0.55rem;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.toast-stack .toast {
+  position: static;
+  pointer-events: auto;
 }
 
 .toast--success {

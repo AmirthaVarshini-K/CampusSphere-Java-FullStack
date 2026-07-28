@@ -958,6 +958,182 @@
   color: var(--color-muted);
 }
 
+.workspace-hero {
+  align-items: flex-start;
+}
+
+.workspace-overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.workspace-summary {
+  display: grid;
+  gap: 1rem;
+}
+
+.workspace-summary__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.workspace-summary__item {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 1rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+}
+
+.workspace-summary__item span {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+.workspace-summary__item strong {
+  color: var(--color-heading);
+}
+
+.workspace-summary__list {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: 0.55rem;
+  color: var(--color-muted);
+}
+
+.workspace-table-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.workspace-table-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.workspace-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.workspace-filters {
+  display: grid;
+  gap: 1rem;
+}
+
+.workspace-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+}
+
+.workspace-progress,
+.workspace-checklist {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.workspace-progress__item,
+.workspace-checklist__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.9rem 0.95rem;
+  border-radius: 1rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+}
+
+.workspace-progress__item--done,
+.workspace-checklist__item--done {
+  border-color: rgba(21, 143, 107, 0.22);
+  background: rgba(21, 143, 107, 0.06);
+}
+
+.workspace-progress__item strong,
+.workspace-checklist__item strong,
+.workspace-profile h2,
+.workspace-current-year h2 {
+  color: var(--color-heading);
+}
+
+.workspace-progress__item p,
+.workspace-checklist__item p,
+.workspace-profile p,
+.workspace-current-year p {
+  margin: 0.2rem 0 0;
+  color: var(--color-muted);
+}
+
+.workspace-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.workspace-stat {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.workspace-stat span {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+.workspace-stat strong {
+  color: var(--color-heading);
+  font-size: var(--text-2xl);
+}
+
+.workspace-profile {
+  display: grid;
+  gap: 1rem;
+}
+
+.workspace-profile__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.workspace-profile__grid div {
+  padding: 0.85rem 0.95rem;
+  border-radius: 1rem;
+  border: 1px solid var(--color-border);
+  background: #fff;
+}
+
+.workspace-profile__grid span {
+  display: block;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+.workspace-current-year {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.workspace-current-year__meta {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.workspace-next-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 .auth-page {
   gap: var(--space-6);
 }
@@ -1121,6 +1297,10 @@
   .dashboard-page__hero {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .workspace-overview {
+    grid-template-columns: 1fr;
   }
 }
 
