@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: CampusSphere
+  datasource:
+    url: ${DB_URL:jdbc:h2:mem:campussphere;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;INIT=CREATE SCHEMA IF NOT EXISTS campussphere}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+    driver-class-name: ${DB_DRIVER:org.h2.Driver}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+        default_schema: campussphere
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: ${SERVER_PORT:8080}
+
+campus-sphere:
+  app-name: ${APP_NAME:CampusSphere}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+  security:
+    jwt:
+      issuer: ${JWT_ISSUER:campussphere}
+      secret: ${JWT_SECRET:change-me-in-production}
+      access-token-minutes: ${JWT_ACCESS_TOKEN_MINUTES:30}
+      refresh-token-days: ${JWT_REFRESH_TOKEN_DAYS:14}
+      reset-token-minutes: ${JWT_RESET_TOKEN_MINUTES:20}
+  seed:
+    admin-email: ${SEED_ADMIN_EMAIL:admin@campussphere.edu}
+    admin-password: ${SEED_ADMIN_PASSWORD:Admin@1234!}
+    faculty-email: ${SEED_FACULTY_EMAIL:coordinator@campussphere.edu}
+    faculty-password: ${SEED_FACULTY_PASSWORD:Faculty@1234!}
+  auth:
+    max-failed-attempts: ${AUTH_MAX_FAILED_ATTEMPTS:5}
+    lock-minutes: ${AUTH_LOCK_MINUTES:15}
+
+logging:
+  level:
+    root: INFO
+    com.campussphere: DEBUG
+    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG

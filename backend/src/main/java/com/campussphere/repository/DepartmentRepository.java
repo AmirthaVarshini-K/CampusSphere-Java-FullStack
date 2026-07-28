@@ -1,0 +1,16 @@
+package com.campussphere.repository;
+
+import com.campussphere.entity.Department;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
+import java.util.Optional;
+
+public interface DepartmentRepository extends JpaRepository<Department, Long>, JpaSpecificationExecutor<Department> {
+
+    Optional<Department> findByIdAndDeletedFalse(Long id);
+
+    boolean existsByInstitution_IdAndDepartmentCodeIgnoreCaseAndDeletedFalse(Long institutionId, String departmentCode);
+
+    boolean existsByInstitution_IdAndDepartmentNameIgnoreCaseAndDeletedFalse(Long institutionId, String departmentName);
+}
