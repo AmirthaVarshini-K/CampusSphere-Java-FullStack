@@ -14,8 +14,7 @@ import java.time.LocalDate;
 @Table(
         name = "academic_years",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_academic_years_institution_label", columnNames = {"institution_id", "year_label"}),
-                @UniqueConstraint(name = "uk_academic_years_current", columnNames = {"institution_id", "current_year"})
+                @UniqueConstraint(name = "uk_academic_years_institution_label", columnNames = {"institution_id", "year_label"})
         }
 )
 public class AcademicYear extends BaseEntity {

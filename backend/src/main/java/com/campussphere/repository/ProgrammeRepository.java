@@ -13,4 +13,8 @@ public interface ProgrammeRepository extends JpaRepository<Programme, Long>, Jpa
     boolean existsByInstitution_IdAndProgrammeCodeIgnoreCaseAndDeletedFalse(Long institutionId, String programmeCode);
 
     boolean existsByInstitution_IdAndProgrammeNameIgnoreCaseAndDeletedFalse(Long institutionId, String programmeName);
+
+    boolean existsByInstitution_IdAndProgrammeCodeIgnoreCaseAndIdNotAndDeletedFalse(Long institutionId, String programmeCode, Long id);
+
+    boolean existsByInstitution_IdAndProgrammeNameIgnoreCaseAndIdNotAndDeletedFalse(Long institutionId, String programmeName, Long id);
 }

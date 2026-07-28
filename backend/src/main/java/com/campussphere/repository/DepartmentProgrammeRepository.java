@@ -11,4 +11,6 @@ public interface DepartmentProgrammeRepository extends JpaRepository<DepartmentP
     Optional<DepartmentProgramme> findByIdAndDeletedFalse(Long id);
 
     boolean existsByDepartment_IdAndProgramme_IdAndDeletedFalse(Long departmentId, Long programmeId);
+
+    boolean existsByDepartment_IdAndProgramme_IdAndIdNotAndDeletedFalse(Long departmentId, Long programmeId, Long id);
 }

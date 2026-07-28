@@ -1,11 +1,14 @@
 package com.campussphere.config;
 
+import com.campussphere.entity.Institution;
+import com.campussphere.entity.InstitutionType;
 import com.campussphere.entity.Permission;
 import com.campussphere.entity.RecordStatus;
 import com.campussphere.entity.Role;
 import com.campussphere.entity.RoleCode;
 import com.campussphere.entity.User;
 import com.campussphere.entity.UserRole;
+import com.campussphere.repository.InstitutionRepository;
 import com.campussphere.repository.PermissionRepository;
 import com.campussphere.repository.RoleRepository;
 import com.campussphere.repository.UserRepository;
@@ -30,6 +33,7 @@ public class DataSeeder {
 
     private final PermissionRepository permissionRepository;
     private final RoleRepository roleRepository;
+    private final InstitutionRepository institutionRepository;
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -38,6 +42,7 @@ public class DataSeeder {
     public DataSeeder(
             PermissionRepository permissionRepository,
             RoleRepository roleRepository,
+            InstitutionRepository institutionRepository,
             UserRepository userRepository,
             UserRoleRepository userRoleRepository,
             PasswordEncoder passwordEncoder,
@@ -45,6 +50,7 @@ public class DataSeeder {
     ) {
         this.permissionRepository = permissionRepository;
         this.roleRepository = roleRepository;
+        this.institutionRepository = institutionRepository;
         this.userRepository = userRepository;
         this.userRoleRepository = userRoleRepository;
         this.passwordEncoder = passwordEncoder;
@@ -56,8 +62,9 @@ public class DataSeeder {
     public void seed() {
         seedPermissions();
         seedRoles();
+        Institution institution = seedInstitution();
         seedAdminUser();
-        seedFacultyUser();
+        seedFacultyUser(institution);
     }
 
     private void seedPermissions() {
@@ -98,6 +105,24 @@ public class DataSeeder {
         roleRepository.save(role);
     }
 
+    private Institution seedInstitution() {
+        return institutionRepository.findByInstitutionCodeIgnoreCaseAndDeletedFalse("CS-001").orElseGet(() -> {
+            Institution institution = new Institution();
+            institution.setInstitutionCode("CS-001");
+            institution.setInstitutionName("CampusSphere Institute of Technology");
+            institution.setShortName("CSIT");
+            institution.setInstitutionType(InstitutionType.COLLEGE);
+            institution.setAffiliation("Autonomous");
+            institution.setEmail("info@campussphere-institute.edu");
+            institution.setPhone("+91 90000 00001");
+            institution.setCity("Bengaluru");
+            institution.setState("Karnataka");
+            institution.setCountry("India");
+            institution.setStatus(RecordStatus.ACTIVE);
+            return institutionRepository.save(institution);
+        });
+    }
+
     private void seedAdminUser() {
         seedAccount(
                 applicationProperties.getSeed().getAdminEmail(),
@@ -109,17 +134,19 @@ public class DataSeeder {
                 null,
                 null,
                 null,
+                null,
                 null
         );
     }
 
-    private void seedFacultyUser() {
+    private void seedFacultyUser(Institution institution) {
         seedAccount(
                 applicationProperties.getSeed().getFacultyEmail(),
                 applicationProperties.getSeed().getFacultyPassword(),
                 "Faculty",
                 "Coordinator",
                 RoleCode.FACULTY_COORDINATOR,
+                institution,
                 "FAC-1001",
                 "Computer Science",
                 null,
@@ -129,11 +156,13 @@ public class DataSeeder {
     }
 
     private void seedAccount(String email, String password, String firstName, String lastName, RoleCode roleCode,
+                             Institution institution,
                              String employeeId, String department, String academicYear, String section, String registerNumber) {
         if (userRepository.existsByEmailIgnoreCaseAndDeletedFalse(email)) {
             return;
         }
         User user = new User();
+        user.setInstitution(institution);
         user.setFirstName(firstName);
         user.setLastName(lastName);
         user.setEmail(email.toLowerCase(Locale.ROOT));

@@ -25,6 +25,10 @@ import java.util.Set;
 )
 public class User extends BaseEntity {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "institution_id")
+    private Institution institution;
+
     @Column(name = "first_name", nullable = false, length = 80)
     private String firstName;
 
@@ -99,6 +103,14 @@ public class User extends BaseEntity {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    public Institution getInstitution() {
+        return institution;
+    }
+
+    public void setInstitution(Institution institution) {
+        this.institution = institution;
     }
 
     public String getEmail() {

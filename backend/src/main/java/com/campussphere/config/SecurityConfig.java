@@ -5,6 +5,7 @@ import com.campussphere.security.JwtAuthenticationEntryPoint;
 import com.campussphere.security.JwtAuthenticationFilter;
 import com.campussphere.security.JwtAccessDeniedHandler;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;

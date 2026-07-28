@@ -6,12 +6,14 @@ import { DASHBOARD_NAV_ITEMS } from '../constants/navigation';
 import { useAppShell } from '../context/AppShellContext';
 import { useAuth } from '../context/AuthContext';
 import { useMediaQuery } from '../hooks/useMediaQuery';
+import { getPrimaryRole } from '../utils/auth';
 
 const DASHBOARD_TITLES = {
   '/dashboard': { breadcrumb: 'CampusSphere / Dashboard', title: 'Dashboard' },
   '/dashboard/profile': { breadcrumb: 'CampusSphere / Profile', title: 'Profile' },
   '/dashboard/security': { breadcrumb: 'CampusSphere / Security', title: 'Security' },
-  '/dashboard/activity': { breadcrumb: 'CampusSphere / Activity', title: 'Activity' }
+  '/dashboard/activity': { breadcrumb: 'CampusSphere / Activity', title: 'Activity' },
+  '/dashboard/institution-setup': { breadcrumb: 'CampusSphere / Institution Setup', title: 'Institution Setup' }
 };
 
 export default function DashboardLayout() {
@@ -20,8 +22,12 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useMediaQuery('(max-width: 1024px)');
+  const roleCode = getPrimaryRole(user);
   const current = DASHBOARD_TITLES[location.pathname] ?? DASHBOARD_TITLES['/dashboard'];
   const isSidebarVisible = isMobile ? isSidebarOpen : true;
+  const sidebarItems = ['SUPER_ADMIN', 'INSTITUTION_ADMIN', 'ADMINISTRATOR'].includes(roleCode)
+    ? DASHBOARD_NAV_ITEMS
+    : DASHBOARD_NAV_ITEMS.filter(item => item.label !== 'Institution Setup');
 
   async function handleLogout() {
     await signOut();
@@ -32,7 +38,7 @@ export default function DashboardLayout() {
     <div className="dashboard-shell">
       <Sidebar
         brand="CampusSphere"
-        items={DASHBOARD_NAV_ITEMS}
+        items={sidebarItems}
         collapsed={!isSidebarVisible}
         onNavigate={isMobile ? closeSidebar : undefined}
         onClose={isMobile ? closeSidebar : undefined}

@@ -11,5 +11,9 @@ public interface SemesterRepository extends JpaRepository<Semester, Long>, JpaSp
 
     Optional<Semester> findByIdAndDeletedFalse(Long id);
 
-    List<Semester> findByDepartmentProgramme_IdAndDeletedFalseOrderBySemesterNumberAsc(Long departmentProgrammeId);
+    List<Semester> findByProgramme_IdAndDeletedFalseOrderBySemesterNumberAsc(Long programmeId);
+
+    boolean existsByProgramme_IdAndSemesterNumberAndDeletedFalse(Long programmeId, int semesterNumber);
+
+    boolean existsByProgramme_IdAndSemesterNumberAndIdNotAndDeletedFalse(Long programmeId, int semesterNumber, Long id);
 }

@@ -16,6 +16,10 @@ import jakarta.persistence.UniqueConstraint;
 public class DepartmentProgramme extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "institution_id", nullable = false)
+    private Institution institution;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
 
@@ -29,6 +33,14 @@ public class DepartmentProgramme extends BaseEntity {
 
     @Column(name = "intake_capacity")
     private Integer intakeCapacity;
+
+    public Institution getInstitution() {
+        return institution;
+    }
+
+    public void setInstitution(Institution institution) {
+        this.institution = institution;
+    }
 
     public Department getDepartment() {
         return department;

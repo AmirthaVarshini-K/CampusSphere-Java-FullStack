@@ -17,6 +17,7 @@ const AccessDeniedPage = lazy(() => import('../pages/auth/AccessDeniedPage'));
 const StudentProfileSetupPage = lazy(() => import('../pages/auth/StudentProfileSetupPage'));
 const DashboardShellPage = lazy(() => import('../pages/DashboardShellPage'));
 const DashboardPreviewPage = lazy(() => import('../pages/DashboardPreviewPage'));
+const InstitutionSetupPage = lazy(() => import('../pages/InstitutionSetupPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 
 function RouteLoader() {
@@ -50,6 +51,8 @@ export default function AppRoutes() {
         <Route element={<ProtectedRoute />}>
           <Route path={APP_ROUTES.dashboard} element={<DashboardLayout />}>
             <Route index element={<DashboardShellPage />} />
+            <Route path="institution-setup" element={<InstitutionSetupPage />} />
+            <Route path="institution-setup/*" element={<InstitutionSetupPage />} />
             <Route path="*" element={<DashboardShellPage />} />
           </Route>
         </Route>

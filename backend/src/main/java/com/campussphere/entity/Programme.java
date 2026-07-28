@@ -37,6 +37,9 @@ public class Programme extends BaseEntity {
     @Column(name = "duration_years", nullable = false)
     private int durationYears;
 
+    @Column(name = "duration_semesters", nullable = false)
+    private int durationSemesters;
+
     public Institution getInstitution() {
         return institution;
     }
@@ -75,5 +78,13 @@ public class Programme extends BaseEntity {
 
     public void setDurationYears(int durationYears) {
         this.durationYears = durationYears;
+    }
+
+    public int getDurationSemesters() {
+        return durationSemesters;
+    }
+
+    public void setDurationSemesters(int durationSemesters) {
+        this.durationSemesters = durationSemesters;
     }
 }

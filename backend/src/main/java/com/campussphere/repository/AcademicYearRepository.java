@@ -14,4 +14,8 @@ public interface AcademicYearRepository extends JpaRepository<AcademicYear, Long
     Optional<AcademicYear> findByInstitution_IdAndCurrentYearTrueAndDeletedFalse(Long institutionId);
 
     List<AcademicYear> findByInstitution_IdAndDeletedFalseOrderByStartDateDesc(Long institutionId);
+
+    boolean existsByInstitution_IdAndYearLabelIgnoreCaseAndDeletedFalse(Long institutionId, String yearLabel);
+
+    boolean existsByInstitution_IdAndYearLabelIgnoreCaseAndIdNotAndDeletedFalse(Long institutionId, String yearLabel, Long id);
 }

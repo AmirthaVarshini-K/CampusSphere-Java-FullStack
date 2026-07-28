@@ -13,4 +13,8 @@ public interface InstitutionRepository extends JpaRepository<Institution, Long>,
     boolean existsByInstitutionCodeIgnoreCaseAndDeletedFalse(String institutionCode);
 
     boolean existsByInstitutionNameIgnoreCaseAndDeletedFalse(String institutionName);
+
+    boolean existsByInstitutionCodeIgnoreCaseAndIdNotAndDeletedFalse(String institutionCode, Long id);
+
+    boolean existsByInstitutionNameIgnoreCaseAndIdNotAndDeletedFalse(String institutionName, Long id);
 }

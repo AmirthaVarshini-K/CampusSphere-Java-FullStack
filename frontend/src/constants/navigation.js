@@ -11,5 +11,6 @@ export const DASHBOARD_NAV_ITEMS = [
   { label: 'Overview', path: APP_ROUTES.dashboard },
   { label: 'Profile', path: `${APP_ROUTES.dashboard}/profile` },
   { label: 'Security', path: `${APP_ROUTES.dashboard}/security` },
-  { label: 'Activity', path: `${APP_ROUTES.dashboard}/activity` }
+  { label: 'Activity', path: `${APP_ROUTES.dashboard}/activity` },
+  { label: 'Institution Setup', path: `${APP_ROUTES.dashboard}/institution-setup` }
 ];

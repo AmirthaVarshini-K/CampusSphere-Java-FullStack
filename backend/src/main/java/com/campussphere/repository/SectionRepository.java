@@ -12,4 +12,23 @@ public interface SectionRepository extends JpaRepository<Section, Long>, JpaSpec
     Optional<Section> findByIdAndDeletedFalse(Long id);
 
     List<Section> findByDepartment_IdAndDeletedFalseOrderByStudyYearAscSectionNameAsc(Long departmentId);
+
+    boolean existsByInstitution_IdAndDepartment_IdAndProgramme_IdAndAcademicYear_IdAndSemester_IdAndSectionNameIgnoreCaseAndDeletedFalse(
+            Long institutionId,
+            Long departmentId,
+            Long programmeId,
+            Long academicYearId,
+            Long semesterId,
+            String sectionName
+    );
+
+    boolean existsByInstitution_IdAndDepartment_IdAndProgramme_IdAndAcademicYear_IdAndSemester_IdAndSectionNameIgnoreCaseAndIdNotAndDeletedFalse(
+            Long institutionId,
+            Long departmentId,
+            Long programmeId,
+            Long academicYearId,
+            Long semesterId,
+            String sectionName,
+            Long id
+    );
 }

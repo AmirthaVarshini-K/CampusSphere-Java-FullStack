@@ -13,4 +13,8 @@ public interface DepartmentRepository extends JpaRepository<Department, Long>, J
     boolean existsByInstitution_IdAndDepartmentCodeIgnoreCaseAndDeletedFalse(Long institutionId, String departmentCode);
 
     boolean existsByInstitution_IdAndDepartmentNameIgnoreCaseAndDeletedFalse(Long institutionId, String departmentName);
+
+    boolean existsByInstitution_IdAndDepartmentCodeIgnoreCaseAndIdNotAndDeletedFalse(Long institutionId, String departmentCode, Long id);
+
+    boolean existsByInstitution_IdAndDepartmentNameIgnoreCaseAndIdNotAndDeletedFalse(Long institutionId, String departmentName, Long id);
 }

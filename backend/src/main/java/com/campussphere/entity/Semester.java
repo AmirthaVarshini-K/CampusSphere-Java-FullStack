@@ -2,7 +2,6 @@ package com.campussphere.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -11,26 +10,38 @@ import jakarta.persistence.UniqueConstraint;
 @Entity
 @Table(
         name = "semesters",
-        uniqueConstraints = @UniqueConstraint(name = "uk_semesters_department_programme_number", columnNames = {"department_programme_id", "semester_number"})
+        uniqueConstraints = @UniqueConstraint(name = "uk_semesters_programme_number", columnNames = {"programme_id", "semester_number"})
 )
 public class Semester extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "department_programme_id", nullable = false)
-    private DepartmentProgramme departmentProgramme;
+    @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY, optional = false)
+    @JoinColumn(name = "institution_id", nullable = false)
+    private Institution institution;
+
+    @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY, optional = false)
+    @JoinColumn(name = "programme_id", nullable = false)
+    private Programme programme;
 
     @Column(name = "semester_number", nullable = false)
     private int semesterNumber;
 
-    @Column(name = "semester_name", nullable = false, length = 80)
-    private String semesterName;
+    @Column(name = "display_name", nullable = false, length = 80)
+    private String displayName;
 
-    public DepartmentProgramme getDepartmentProgramme() {
-        return departmentProgramme;
+    public Institution getInstitution() {
+        return institution;
     }
 
-    public void setDepartmentProgramme(DepartmentProgramme departmentProgramme) {
-        this.departmentProgramme = departmentProgramme;
+    public void setInstitution(Institution institution) {
+        this.institution = institution;
+    }
+
+    public Programme getProgramme() {
+        return programme;
+    }
+
+    public void setProgramme(Programme programme) {
+        this.programme = programme;
     }
 
     public int getSemesterNumber() {
@@ -41,11 +52,11 @@ public class Semester extends BaseEntity {
         this.semesterNumber = semesterNumber;
     }
 
-    public String getSemesterName() {
-        return semesterName;
+    public String getDisplayName() {
+        return displayName;
     }
 
-    public void setSemesterName(String semesterName) {
-        this.semesterName = semesterName;
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 }

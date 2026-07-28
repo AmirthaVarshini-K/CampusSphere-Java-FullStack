@@ -13,14 +13,22 @@ import jakarta.persistence.UniqueConstraint;
         name = "sections",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_sections_context",
-                columnNames = {"department_id", "academic_year_id", "semester_id", "study_year", "section_name"}
+                columnNames = {"institution_id", "department_id", "programme_id", "academic_year_id", "semester_id", "section_name"}
         )
 )
 public class Section extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "institution_id", nullable = false)
+    private Institution institution;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "programme_id", nullable = false)
+    private Programme programme;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "academic_year_id", nullable = false)
@@ -34,11 +42,22 @@ public class Section extends BaseEntity {
     @JoinColumn(name = "advisor_user_id")
     private User advisor;
 
-    @Column(name = "study_year", nullable = false)
-    private int studyYear;
+    @Column(name = "study_year")
+    private Integer studyYear;
 
     @Column(name = "section_name", nullable = false, length = 80)
     private String sectionName;
+
+    @Column(name = "capacity")
+    private Integer capacity;
+
+    public Institution getInstitution() {
+        return institution;
+    }
+
+    public void setInstitution(Institution institution) {
+        this.institution = institution;
+    }
 
     public Department getDepartment() {
         return department;
@@ -46,6 +65,14 @@ public class Section extends BaseEntity {
 
     public void setDepartment(Department department) {
         this.department = department;
+    }
+
+    public Programme getProgramme() {
+        return programme;
+    }
+
+    public void setProgramme(Programme programme) {
+        this.programme = programme;
     }
 
     public AcademicYear getAcademicYear() {
@@ -72,11 +99,11 @@ public class Section extends BaseEntity {
         this.advisor = advisor;
     }
 
-    public int getStudyYear() {
+    public Integer getStudyYear() {
         return studyYear;
     }
 
-    public void setStudyYear(int studyYear) {
+    public void setStudyYear(Integer studyYear) {
         this.studyYear = studyYear;
     }
 
@@ -86,5 +113,13 @@ public class Section extends BaseEntity {
 
     public void setSectionName(String sectionName) {
         this.sectionName = sectionName;
+    }
+
+    public Integer getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(Integer capacity) {
+        this.capacity = capacity;
     }
 }
