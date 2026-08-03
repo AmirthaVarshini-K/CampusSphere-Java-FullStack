@@ -26,6 +26,16 @@ export default function Navbar({
 
   if (variant === 'dashboard') {
     const roleCode = getPrimaryRole(user);
+    const routeTitle = location.pathname.startsWith('/dashboard/events')
+      ? (location.pathname.includes('/register')
+        ? { breadcrumb: 'CampusSphere / Registrations', title: 'Event Registration' }
+        : { breadcrumb: 'CampusSphere / Events', title: 'Events' })
+      : location.pathname.startsWith('/dashboard/registrations')
+        ? { breadcrumb: 'CampusSphere / Registrations', title: 'Registrations' }
+        : location.pathname.startsWith('/dashboard/institution-setup')
+        ? { breadcrumb: 'CampusSphere / Institution Setup', title: 'Institution Setup' }
+        : null;
+    const resolvedTitle = routeTitle ?? { breadcrumb: pageBreadcrumb ?? 'CampusSphere workspace', title: pageTitle ?? 'Dashboard' };
 
     return (
       <header className="navbar navbar--dashboard">
@@ -42,9 +52,9 @@ export default function Navbar({
             </Button>
           )}
           <div className="navbar__title-block">
-            <div className="navbar__crumb">{pageBreadcrumb ?? 'CampusSphere workspace'}</div>
+            <div className="navbar__crumb">{resolvedTitle.breadcrumb}</div>
             <Link to={APP_ROUTES.dashboard} className="navbar__brand">
-              {pageTitle ?? 'Dashboard'}
+              {resolvedTitle.title}
             </Link>
           </div>
         </div>

@@ -12,6 +12,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findWithRolesByIdAndDeletedFalse(Long id);
 
     @EntityGraph(attributePaths = {"userRoles", "userRoles.role", "userRoles.role.permissions"})
+    Optional<User> findByIdAndDeletedFalse(Long id);
+
+    @EntityGraph(attributePaths = {"userRoles", "userRoles.role", "userRoles.role.permissions"})
     Optional<User> findWithRolesByEmailIgnoreCaseAndDeletedFalse(String email);
 
     @EntityGraph(attributePaths = {"userRoles", "userRoles.role", "userRoles.role.permissions"})

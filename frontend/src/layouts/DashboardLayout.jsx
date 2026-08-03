@@ -13,7 +13,10 @@ const DASHBOARD_TITLES = {
   '/dashboard/profile': { breadcrumb: 'CampusSphere / Profile', title: 'Profile' },
   '/dashboard/security': { breadcrumb: 'CampusSphere / Security', title: 'Security' },
   '/dashboard/activity': { breadcrumb: 'CampusSphere / Activity', title: 'Activity' },
-  '/dashboard/institution-setup': { breadcrumb: 'CampusSphere / Institution Setup', title: 'Institution Setup' }
+  '/dashboard/institution-setup': { breadcrumb: 'CampusSphere / Institution Setup', title: 'Institution Setup' },
+  '/dashboard/events': { breadcrumb: 'CampusSphere / Events', title: 'Events' },
+  '/dashboard/registrations': { breadcrumb: 'CampusSphere / Registrations', title: 'Registrations' },
+  '/dashboard/events/register': { breadcrumb: 'CampusSphere / Registrations', title: 'Event Registration' }
 };
 
 export default function DashboardLayout() {
@@ -23,11 +26,29 @@ export default function DashboardLayout() {
   const location = useLocation();
   const isMobile = useMediaQuery('(max-width: 1024px)');
   const roleCode = getPrimaryRole(user);
-  const current = DASHBOARD_TITLES[location.pathname] ?? DASHBOARD_TITLES['/dashboard'];
+  const current = location.pathname.startsWith('/dashboard/events')
+    ? (location.pathname.includes('/register') ? DASHBOARD_TITLES['/dashboard/events/register'] : DASHBOARD_TITLES['/dashboard/events'])
+    : location.pathname.startsWith('/dashboard/registrations')
+      ? DASHBOARD_TITLES['/dashboard/registrations']
+    : location.pathname.startsWith('/dashboard/institution-setup')
+      ? DASHBOARD_TITLES['/dashboard/institution-setup']
+      : DASHBOARD_TITLES[location.pathname] ?? DASHBOARD_TITLES['/dashboard'];
   const isSidebarVisible = isMobile ? isSidebarOpen : true;
-  const sidebarItems = ['SUPER_ADMIN', 'INSTITUTION_ADMIN', 'ADMINISTRATOR'].includes(roleCode)
-    ? DASHBOARD_NAV_ITEMS
-    : DASHBOARD_NAV_ITEMS.filter(item => item.label !== 'Institution Setup');
+  const canSeeInstitutionSetup = ['SUPER_ADMIN', 'INSTITUTION_ADMIN', 'ADMINISTRATOR'].includes(roleCode);
+  const canSeeEvents = canSeeInstitutionSetup || roleCode === 'FACULTY_COORDINATOR';
+  const canSeeRegistrations = true;
+  const sidebarItems = DASHBOARD_NAV_ITEMS.filter(item => {
+    if (item.label === 'Institution Setup') {
+      return canSeeInstitutionSetup;
+    }
+    if (item.label === 'Events') {
+      return canSeeEvents;
+    }
+    if (item.label === 'Registrations') {
+      return canSeeRegistrations;
+    }
+    return true;
+  });
 
   async function handleLogout() {
     await signOut();

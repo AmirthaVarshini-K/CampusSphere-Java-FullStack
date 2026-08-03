@@ -8,5 +8,7 @@ export const APP_ROUTES = {
   accessDenied: '/access-denied',
   auth: '/auth',
   dashboard: '/dashboard',
-  profileSetup: '/profile/setup'
+  profileSetup: '/profile/setup',
+  events: '/dashboard/events',
+  registrations: '/dashboard/registrations'
 };

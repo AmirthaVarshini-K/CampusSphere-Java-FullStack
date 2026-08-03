@@ -6,5 +6,8 @@ export const userApi = {
   },
   updateProfile(payload) {
     return apiClient.put('/users/profile', payload);
+  },
+  listUsers() {
+    return apiClient.get('/users');
   }
 };

@@ -11,6 +11,8 @@ public interface SectionRepository extends JpaRepository<Section, Long>, JpaSpec
 
     Optional<Section> findByIdAndDeletedFalse(Long id);
 
+    Optional<Section> findByInstitution_IdAndSectionNameIgnoreCaseAndDeletedFalse(Long institutionId, String sectionName);
+
     List<Section> findByDepartment_IdAndDeletedFalseOrderByStudyYearAscSectionNameAsc(Long departmentId);
 
     boolean existsByInstitution_IdAndDepartment_IdAndProgramme_IdAndAcademicYear_IdAndSemester_IdAndSectionNameIgnoreCaseAndDeletedFalse(
