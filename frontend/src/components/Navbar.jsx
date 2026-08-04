@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import Avatar from './Avatar';
+import Badge from './Badge';
 import Button from './Button';
+import BrandMark from './BrandMark';
+import Icon from './Icon';
 import RoleBadge from './RoleBadge';
 import { classNames } from '../utils/classNames';
 import { APP_ROUTES } from '../constants/routes';
@@ -21,121 +24,154 @@ export default function Navbar({
 }) {
   const location = useLocation();
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     setMobileMenuOpen(false);
+    setSearchOpen(false);
   }, [location.pathname, location.hash]);
 
   if (variant === 'dashboard') {
     const roleCode = getPrimaryRole(user);
-    const routeTitle = location.pathname.startsWith('/dashboard/events')
-      ? (location.pathname.includes('/register')
-        ? { breadcrumb: 'CampusSphere / Registrations', title: 'Event Registration', description: 'Complete the selected event registration without leaving the workspace.' }
-        : { breadcrumb: 'CampusSphere / Events', title: 'Events', description: 'Manage events, sessions, venues, coordinators, and publication state.' })
-      : location.pathname.startsWith('/dashboard/notifications')
-        ? { breadcrumb: 'CampusSphere / Notifications', title: 'Notifications', description: 'Stay on top of updates, invites, and approval changes.' }
-        : location.pathname.startsWith('/dashboard/registrations')
-          ? { breadcrumb: 'CampusSphere / Registrations', title: 'Registrations', description: 'Review participant records, waitlists, teams, and decisions.' }
-          : location.pathname.startsWith('/dashboard/institution-setup')
-            ? { breadcrumb: 'CampusSphere / Institution Setup', title: 'Institution Setup', description: 'Maintain master data that powers the rest of the platform.' }
-            : null;
-    const resolvedTitle = routeTitle ?? {
-      breadcrumb: pageBreadcrumb ?? 'CampusSphere workspace',
-      title: pageTitle ?? 'Dashboard',
-      description: pageDescription ?? 'An authenticated workspace for the current role.'
-    };
+    const headline = (() => {
+      if (location.pathname.startsWith('/dashboard/events')) {
+        return {
+          breadcrumb: location.pathname.includes('/register') ? 'CampusSphere / Registrations' : 'CampusSphere / Events',
+          title: location.pathname.includes('/register') ? 'Event registration' : 'Events studio',
+          description: location.pathname.includes('/register')
+            ? 'Keep the participant workflow focused and calm.'
+            : 'Manage event structure, coordination, and publication from one surface.'
+        };
+      }
+      if (location.pathname.startsWith('/dashboard/notifications')) {
+        return {
+          breadcrumb: 'CampusSphere / Notifications',
+          title: 'Notification centre',
+          description: 'A single place for approvals, invitations, and updates.'
+        };
+      }
+      if (location.pathname.startsWith('/dashboard/registrations')) {
+        return {
+          breadcrumb: 'CampusSphere / Registrations',
+          title: 'Registration workspace',
+          description: 'Review participant flows, teams, and queue states.'
+        };
+      }
+      if (location.pathname.startsWith('/dashboard/institution-setup')) {
+        return {
+          breadcrumb: 'CampusSphere / Institution setup',
+          title: 'Institution setup',
+          description: 'Maintain the college structure that powers the platform.'
+        };
+      }
+      return {
+        breadcrumb: pageBreadcrumb ?? 'CampusSphere workspace',
+        title: pageTitle ?? 'Dashboard',
+        description: pageDescription ?? 'A focused workspace for the current role.'
+      };
+    })();
 
     return (
-      <header className="navbar navbar--dashboard">
-        <div className="navbar__left">
+      <header className="topbar topbar--dashboard">
+        <div className="topbar__title">
           {showMenuButton && (
             <Button
               variant="secondary"
               size="sm"
-              className="navbar__menu-button"
+              className="topbar__menu-button"
               onClick={onMenuToggle}
               aria-label="Toggle navigation"
             >
+              <Icon name="menu" />
               Menu
             </Button>
           )}
-          <div className="navbar__title-block">
-            <div className="navbar__crumb">{resolvedTitle.breadcrumb}</div>
-            <Link to={APP_ROUTES.dashboard} className="navbar__brand">
-              {resolvedTitle.title}
-            </Link>
-            <p className="navbar__subtitle">{resolvedTitle.description}</p>
+          <div className="topbar__title-copy">
+            <span className="topbar__eyebrow">{headline.breadcrumb}</span>
+            <strong>{headline.title}</strong>
+            <p>{headline.description}</p>
           </div>
         </div>
-        <div className="navbar__actions navbar__actions--dashboard">
-          <Button
-            as={Link}
-            variant="secondary"
-            size="sm"
-            className="navbar__notification"
-            to={`${APP_ROUTES.dashboard}/notifications`}
-            aria-label={`Unread notifications: ${unreadCount}`}
-          >
-            <span className="navbar__notification-icon" aria-hidden="true">*</span>
-            <span>Notifications</span>
-            <strong>{unreadCount}</strong>
+
+        <div className="topbar__actions">
+          <div className="topbar__search">
+            <Icon name="search" size={16} />
+            <input
+              type="search"
+              placeholder="Search registrations, events, or students"
+              aria-label="Search the workspace"
+              onFocus={() => setSearchOpen(true)}
+              onBlur={() => setSearchOpen(false)}
+            />
+            <kbd>Ctrl+K</kbd>
+          </div>
+
+          <Button as={Link} variant="secondary" size="sm" className="topbar__chip" to={`${APP_ROUTES.dashboard}/notifications`}>
+            <Icon name="bell" size={16} />
+            <span>Updates</span>
+            <Badge tone="neutral">{unreadCount}</Badge>
           </Button>
-          <div className="navbar__profile">
+
+          <Button variant="secondary" size="sm" className="topbar__chip" onClick={() => {}}>
+            <Icon name="building" size={16} />
+            <span>Campus switcher</span>
+          </Button>
+
+          <div className="topbar__profile">
             <Avatar src={user?.profilePictureUrl} name={user?.fullName} />
-            <div className="navbar__profile-copy">
+            <div>
               <strong>{buildDisplayName(user)}</strong>
               <span>{user?.email ?? 'Session restored locally'}</span>
             </div>
             <RoleBadge role={roleCode} />
           </div>
+
           <Button variant="secondary" size="sm" onClick={onLogout}>
             Logout
           </Button>
         </div>
+
+        {searchOpen && <div className="topbar__hint">Press enter to keep the current shell focused.</div>}
       </header>
     );
   }
 
   return (
-    <header className={`navbar navbar--public ${isMobileMenuOpen ? 'navbar--open' : ''}`}>
-      <div className="navbar__left">
-        <Link to={APP_ROUTES.home} className="navbar__brand navbar__brand--public">
-          <span className="navbar__mark" aria-hidden="true">
-            C
-          </span>
-          <span>
-            CampusSphere
-            <small>One platform. Every event.</small>
-          </span>
+    <header className={classNames('topbar', 'topbar--public', isMobileMenuOpen && 'topbar--open')}>
+      <div className="topbar__brand">
+        <Link to={APP_ROUTES.home} className="topbar__brand-link">
+          <BrandMark />
         </Link>
         {showMenuButton && (
           <Button
             variant="secondary"
             size="sm"
-            className="navbar__menu-button"
+            className="topbar__menu-button"
             onClick={() => setMobileMenuOpen(current => !current)}
             aria-label="Toggle navigation"
             aria-expanded={isMobileMenuOpen}
           >
+            <Icon name="menu" />
             Menu
           </Button>
         )}
       </div>
 
-      <nav className="navbar__nav" aria-label="Primary">
+      <nav className="topbar__nav" aria-label="Primary">
         {publicNavItems.map(item => (
           <NavLink
             key={item.path}
             to={item.path}
-            className={({ isActive }) => classNames('navbar__link', isActive && 'navbar__link--active')}
+            className={({ isActive }) => classNames('topbar__link', isActive && 'topbar__link--active')}
             onClick={() => setMobileMenuOpen(false)}
           >
-            {item.label}
+            <Icon name={item.icon} size={16} />
+            <span>{item.label}</span>
           </NavLink>
         ))}
       </nav>
 
-      <div className="navbar__actions">
+      <div className="topbar__actions topbar__actions--public">
         <Button as={Link} variant="secondary" size="sm" to={APP_ROUTES.login}>
           Login
         </Button>
@@ -144,20 +180,21 @@ export default function Navbar({
         </Button>
       </div>
 
-      <div className="navbar__mobile-panel">
-        <nav className="navbar__nav" aria-label="Mobile primary">
+      <div className="topbar__drawer">
+        <nav className="topbar__nav topbar__nav--drawer" aria-label="Mobile primary">
           {publicNavItems.map(item => (
             <NavLink
               key={`${item.path}-mobile`}
               to={item.path}
-              className={({ isActive }) => classNames('navbar__link', isActive && 'navbar__link--active')}
+              className={({ isActive }) => classNames('topbar__link', isActive && 'topbar__link--active')}
               onClick={() => setMobileMenuOpen(false)}
             >
-              {item.label}
+              <Icon name={item.icon} size={16} />
+              <span>{item.label}</span>
             </NavLink>
           ))}
         </nav>
-        <div className="navbar__actions">
+        <div className="topbar__actions topbar__actions--public">
           <Button as={Link} variant="secondary" size="sm" to={APP_ROUTES.login} onClick={() => setMobileMenuOpen(false)}>
             Login
           </Button>

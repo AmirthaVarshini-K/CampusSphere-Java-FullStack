@@ -6,6 +6,7 @@ import EmptyState from '../components/EmptyState';
 import ErrorState from '../components/ErrorState';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import SearchBar from '../components/SearchBar';
+import SectionHeading from '../components/SectionHeading';
 import Tabs from '../components/Tabs';
 import { Toast } from '../components/Toast';
 import NotificationItem from '../components/registrations/NotificationItem';
@@ -23,26 +24,18 @@ const FILTER_TABS = [
 
 function groupByDay(items) {
   const today = new Date();
-  const dayKey = value => {
-    const itemDate = new Date(value);
-    const diff = Math.floor((Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) - Date.UTC(itemDate.getFullYear(), itemDate.getMonth(), itemDate.getDate())) / 86400000);
-    if (diff <= 0) {
-      return 'Today';
+  return items.reduce((groups, item) => {
+    const date = item.createdAt ? new Date(item.createdAt) : null;
+    const diff = date
+      ? Math.floor((Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) - Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())) / 86400000)
+      : 2;
+    const label = diff <= 0 ? 'Today' : diff === 1 ? 'Yesterday' : 'Earlier';
+    if (!groups[label]) {
+      groups[label] = [];
     }
-    if (diff === 1) {
-      return 'Yesterday';
-    }
-    return 'Earlier';
-  };
-  const groups = new Map();
-  items.forEach(item => {
-    const dateKey = item.createdAt ? dayKey(item.createdAt) : 'Earlier';
-    if (!groups.has(dateKey)) {
-      groups.set(dateKey, []);
-    }
-    groups.get(dateKey).push(item);
-  });
-  return [...groups.entries()];
+    groups[label].push(item);
+    return groups;
+  }, {});
 }
 
 export default function NotificationCenterPage() {
@@ -106,30 +99,20 @@ export default function NotificationCenterPage() {
   }
 
   return (
-    <div className="dashboard-page notification-center">
-      <section className="dashboard-page__hero workspace-hero">
-        <div>
-          <Badge tone="neutral">Notifications</Badge>
-          <h1>Notification centre</h1>
-          <p>Track registration updates, team invitations, and status changes in one place.</p>
-        </div>
-        <div className="workspace-actions">
-          <Badge tone={unreadCount ? 'warning' : 'neutral'}>{unreadCount} unread</Badge>
+    <div className="page-stack notification-center">
+      <SectionHeading
+        eyebrow="Notifications"
+        title="Notification centre"
+        description="Track registration updates, team invitations, and status changes in one calm surface."
+        action={<Badge tone={unreadCount ? 'warning' : 'neutral'}>{unreadCount} unread</Badge>}
+      />
+
+      <Card elevated className="notification-center__panel">
+        <div className="notification-center__toolbar">
+          <SearchBar value={query} onChange={setQuery} placeholder="Search notifications" />
           <Button variant="secondary" size="sm" onClick={handleMarkAllRead} disabled={!unreadCount}>
             Mark all read
           </Button>
-        </div>
-      </section>
-
-      <Card elevated className="workspace-table-card">
-        <div className="workspace-table-card__meta">
-          <div>
-            <h2>Inbox</h2>
-            <p>Use filters to narrow messages by category or unread state. Recent items are grouped by day.</p>
-          </div>
-        </div>
-        <div className="workspace-filters">
-          <SearchBar value={query} onChange={setQuery} placeholder="Search notifications" />
         </div>
         <Tabs items={FILTER_TABS} activeKey={filter} onChange={setFilter} />
 
@@ -139,9 +122,9 @@ export default function NotificationCenterPage() {
           <ErrorState title="Notifications unavailable" description={error} onRetry={loadNotifications} />
         ) : filtered.length ? (
           <div className="notification-center__groups">
-            {groups.map(([label, items]) => (
+            {Object.entries(groups).map(([label, items]) => (
               <section key={label} className="notification-center__group">
-                <div className="notification-center__group-title">
+                <div className="notification-center__group-header">
                   <h3>{label}</h3>
                   <Badge tone="neutral">{items.length}</Badge>
                 </div>
@@ -158,12 +141,17 @@ export default function NotificationCenterPage() {
             title="No notifications match the current filter"
             description="Try a different tab or clear the search field to review recent updates."
             actionLabel="Clear filters"
-            onAction={() => { setFilter('all'); setQuery(''); }}
+            onAction={() => {
+              setFilter('all');
+              setQuery('');
+            }}
           />
         )}
       </Card>
 
-      {toasts.map(toast => <Toast key={toast.id} message={toast.message} tone={toast.tone} />)}
+      {toasts.map(toast => (
+        <Toast key={toast.id} message={toast.message} tone={toast.tone} />
+      ))}
     </div>
   );
 }

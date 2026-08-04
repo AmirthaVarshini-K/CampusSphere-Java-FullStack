@@ -1,14 +1,19 @@
 import { Link } from 'react-router-dom';
-import AuthCard from '../../components/AuthCard';
+import Badge from '../../components/Badge';
 import Button from '../../components/Button';
+import BrandMark from '../../components/BrandMark';
+import Card from '../../components/Card';
 import { APP_ROUTES } from '../../constants/routes';
 
 export default function AccessDeniedPage() {
   return (
-    <AuthCard title="Access denied" eyebrow="CampusSphere permissions" description="Your account does not have permission for this action.">
-      <div className="state-message">
-        <p>The requested resource is protected by role-based authorization. Please contact your administrator if this feels incorrect.</p>
-        <div className="button-row">
+    <div className="state-page">
+      <Card className="state-page__card" elevated>
+        <BrandMark />
+        <Badge tone="neutral">CampusSphere permissions</Badge>
+        <h1>Access denied</h1>
+        <p>The current account does not have permission for this action. Ask an administrator if you believe this is incorrect.</p>
+        <div className="state-page__actions">
           <Button as={Link} to={APP_ROUTES.dashboard}>
             Return to dashboard
           </Button>
@@ -16,7 +21,7 @@ export default function AccessDeniedPage() {
             Home
           </Button>
         </div>
-      </div>
-    </AuthCard>
+      </Card>
+    </div>
   );
 }

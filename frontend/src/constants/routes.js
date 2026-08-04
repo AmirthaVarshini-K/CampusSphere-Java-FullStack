@@ -10,5 +10,9 @@ export const APP_ROUTES = {
   dashboard: '/dashboard',
   profileSetup: '/profile/setup',
   events: '/dashboard/events',
-  registrations: '/dashboard/registrations'
+  registrations: '/dashboard/registrations',
+  attendance: '/dashboard/attendance',
+  attendanceScanner: '/dashboard/attendance/scanner',
+  attendanceHistory: '/dashboard/attendance/history',
+  attendanceReports: '/dashboard/attendance/reports'
 };

@@ -19,6 +19,10 @@ const DASHBOARD_TITLES = {
   '/dashboard/events': { breadcrumb: 'CampusSphere / Events', title: 'Events', description: 'Organise symposiums, venues, sessions, and publication states.' },
   '/dashboard/notifications': { breadcrumb: 'CampusSphere / Notifications', title: 'Notifications', description: 'Track approvals, invitations, and workspace updates in one place.' },
   '/dashboard/registrations': { breadcrumb: 'CampusSphere / Registrations', title: 'Registrations', description: 'Review participant records, waitlists, and team workflows.' },
+  '/dashboard/attendance': { breadcrumb: 'CampusSphere / Attendance', title: 'Attendance', description: 'Check in participants, review history, and prepare reports.' },
+  '/dashboard/attendance/scanner': { breadcrumb: 'CampusSphere / Attendance', title: 'Attendance Scanner', description: 'Scan QR tokens or record manual attendance for active sessions.' },
+  '/dashboard/attendance/history': { breadcrumb: 'CampusSphere / Attendance', title: 'Attendance History', description: 'Search attendance records and review the latest audit trail.' },
+  '/dashboard/attendance/reports': { breadcrumb: 'CampusSphere / Attendance', title: 'Attendance Reports', description: 'Export attendance summaries and certificate readiness views.' },
   '/dashboard/events/register': { breadcrumb: 'CampusSphere / Registrations', title: 'Event Registration', description: 'Complete a focused registration flow for the selected event.' }
 };
 
@@ -62,6 +66,14 @@ export default function DashboardLayout() {
     ? (location.pathname.includes('/register') ? DASHBOARD_TITLES['/dashboard/events/register'] : DASHBOARD_TITLES['/dashboard/events'])
     : location.pathname.startsWith('/dashboard/notifications')
       ? DASHBOARD_TITLES['/dashboard/notifications']
+    : location.pathname.startsWith('/dashboard/attendance')
+      ? (location.pathname.includes('/scanner')
+        ? DASHBOARD_TITLES['/dashboard/attendance/scanner']
+        : location.pathname.includes('/history')
+          ? DASHBOARD_TITLES['/dashboard/attendance/history']
+          : location.pathname.includes('/reports')
+            ? DASHBOARD_TITLES['/dashboard/attendance/reports']
+            : DASHBOARD_TITLES['/dashboard/attendance'])
     : location.pathname.startsWith('/dashboard/registrations')
       ? DASHBOARD_TITLES['/dashboard/registrations']
     : location.pathname.startsWith('/dashboard/institution-setup')
@@ -71,6 +83,7 @@ export default function DashboardLayout() {
   const canSeeInstitutionSetup = ['SUPER_ADMIN', 'INSTITUTION_ADMIN', 'ADMINISTRATOR'].includes(roleCode);
   const canSeeEvents = canSeeInstitutionSetup || roleCode === 'FACULTY_COORDINATOR';
   const canSeeRegistrations = true;
+  const canSeeAttendance = true;
   const sidebarItems = DASHBOARD_NAV_ITEMS.filter(item => {
     if (item.label === 'Institution Setup') {
       return canSeeInstitutionSetup;
@@ -81,6 +94,9 @@ export default function DashboardLayout() {
     if (item.label === 'Registrations') {
       return canSeeRegistrations;
     }
+    if (item.label === 'Attendance') {
+      return canSeeAttendance;
+    }
     return true;
   });
 
@@ -90,7 +106,7 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="dashboard-shell">
+    <div className="app-shell dashboard-shell">
       <Sidebar
         brand="CampusSphere"
         items={sidebarItems}
@@ -100,7 +116,7 @@ export default function DashboardLayout() {
         onLogout={handleLogout}
         user={user}
       />
-      {isMobile && isSidebarVisible && <div className="dashboard-shell__overlay" onClick={closeSidebar} aria-hidden="true" />}
+      {isMobile && isSidebarVisible && <div className="app-shell__overlay dashboard-shell__overlay" onClick={closeSidebar} aria-hidden="true" />}
       <div className="dashboard-shell__main">
         <Navbar
           variant="dashboard"
@@ -113,7 +129,7 @@ export default function DashboardLayout() {
           pageDescription={current.description}
           unreadCount={unreadCount}
         />
-        <main className="dashboard-shell__content">
+        <main className="app-shell__content dashboard-shell__content">
           <Outlet />
         </main>
         <Footer />

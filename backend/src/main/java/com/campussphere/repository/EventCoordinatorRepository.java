@@ -13,5 +13,7 @@ public interface EventCoordinatorRepository extends JpaRepository<EventCoordinat
 
     Optional<EventCoordinator> findByIdAndDeletedFalse(Long id);
 
+    boolean existsByEvent_IdAndUser_IdAndDeletedFalse(Long eventId, Long userId);
+
     boolean existsByEvent_IdAndUser_IdAndCoordinatorRoleAndDeletedFalse(Long eventId, Long userId, CoordinatorRole coordinatorRole);
 }

@@ -5,9 +5,9 @@ import { PUBLIC_NAV_ITEMS } from '../constants/navigation';
 
 export default function PublicLayout() {
   return (
-    <div className="page-shell page-shell--public">
+    <div className="public-shell page-shell page-shell--public">
       <Navbar variant="public" publicNavItems={PUBLIC_NAV_ITEMS} />
-      <main className="page-shell__content">
+      <main className="page-shell__content public-shell__content">
         <Outlet />
       </main>
       <Footer />

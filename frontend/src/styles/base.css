@@ -14,8 +14,8 @@ body {
   font-family: var(--font-sans);
   color: var(--color-text);
   background:
-    radial-gradient(circle at top left, rgba(68, 85, 214, 0.1), transparent 28%),
-    radial-gradient(circle at top right, rgba(15, 27, 51, 0.08), transparent 32%),
+    radial-gradient(circle at top left, rgba(79, 70, 229, 0.1), transparent 26%),
+    radial-gradient(circle at 85% 10%, rgba(124, 58, 237, 0.08), transparent 20%),
     linear-gradient(180deg, #f8fbff 0%, var(--color-background) 100%);
   min-height: 100vh;
   overflow-x: hidden;
@@ -38,7 +38,7 @@ a {
 }
 
 ::selection {
-  background: rgba(68, 85, 214, 0.16);
+  background: rgba(79, 70, 229, 0.18);
   color: var(--color-heading);
 }
 

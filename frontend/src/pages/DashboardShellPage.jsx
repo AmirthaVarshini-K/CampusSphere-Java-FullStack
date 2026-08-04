@@ -6,24 +6,34 @@ import Card from '../components/Card';
 import EmptyState from '../components/EmptyState';
 import ErrorState from '../components/ErrorState';
 import LoadingSkeleton from '../components/LoadingSkeleton';
+import MetricCard from '../components/MetricCard';
 import ProfileCard from '../components/ProfileCard';
 import RoleBadge from '../components/RoleBadge';
-import StatusIndicator from '../components/StatusIndicator';
+import SectionHeading from '../components/SectionHeading';
+import Timeline from '../components/Timeline';
 import { APP_ROUTES } from '../constants/routes';
 import { useAuth } from '../context/AuthContext';
 import { buildDisplayName, getPrimaryRole, getRoleDescription, getRoleLabel } from '../utils/auth';
 import { getApiErrorMessage } from '../utils/apiErrors';
 
-const summaryCards = [
-  { label: 'Session status', value: 'Protected', tone: 'success', detail: 'JWT-backed access is active for this workspace.' },
-  { label: 'Role routing', value: 'Ready', tone: 'neutral', detail: 'The shell is prepared for admin, faculty, organiser, and student views.' },
-  { label: 'Backend state', value: 'API-first', tone: 'neutral', detail: 'Panels fall back to honest empty states when the server is offline.' }
+const overviewMetrics = [
+  { label: 'Workspace', value: 'Protected', detail: 'JWT and role checks stay in place across the shell.', tone: 'neutral' },
+  { label: 'Session', value: 'Active', detail: 'The current profile is restored into the dashboard.', tone: 'success' },
+  { label: 'Role scope', value: 'Aware', detail: 'Navigation and actions adapt to the signed-in role.', tone: 'neutral' },
+  { label: 'Data feed', value: 'Honest', detail: 'Empty states remain visible when the backend has no live data.', tone: 'warning' }
 ];
 
-const activityNotes = [
-  'No upcoming registrations are loaded yet.',
-  'Event catalogue data will appear here after the backend modules are connected.',
-  'Recent activity is intentionally empty until real user actions are available.'
+const timelineItems = [
+  { title: 'Morning overview', description: 'Review active events, queues, and unresolved tasks in one scan.', icon: 'clock', tone: 'neutral', meta: 'Today' },
+  { title: 'Coordinator review', description: 'Pending approvals and publication steps sit in the same workspace.', icon: 'usersSquare', tone: 'neutral', meta: 'Pending' },
+  { title: 'Workspace status', description: 'The shell remains useful even when the backend returns no live data.', icon: 'shield', tone: 'success', meta: 'Ready' }
+];
+
+const quickActions = [
+  ['Open events', `${APP_ROUTES.dashboard}/events`],
+  ['Review registrations', `${APP_ROUTES.dashboard}/registrations`],
+  ['Open notifications', `${APP_ROUTES.dashboard}/notifications`],
+  ['Complete profile', APP_ROUTES.profileSetup]
 ];
 
 export default function DashboardShellPage() {
@@ -34,7 +44,6 @@ export default function DashboardShellPage() {
 
   useEffect(() => {
     let mounted = true;
-    const initialUser = sessionUser;
 
     async function loadProfile() {
       setLoading(true);
@@ -42,12 +51,12 @@ export default function DashboardShellPage() {
       try {
         const freshProfile = await refreshCurrentUser();
         if (mounted) {
-          setProfile(freshProfile ?? initialUser);
+          setProfile(freshProfile ?? sessionUser);
         }
       } catch (error) {
         if (mounted) {
-          setProfile(initialUser);
-          setErrorMessage(getApiErrorMessage(error, 'Unable to refresh the profile from the backend.'));
+          setProfile(sessionUser);
+          setErrorMessage(getApiErrorMessage(error, 'Unable to refresh the current profile right now.'));
         }
       } finally {
         if (mounted) {
@@ -67,145 +76,125 @@ export default function DashboardShellPage() {
   const roleCode = getPrimaryRole(currentProfile);
   const roleLabel = getRoleLabel(roleCode);
   const completion = useMemo(() => calculateCompletion(currentProfile), [currentProfile]);
-  const isPrivileged = ['SUPER_ADMIN', 'INSTITUTION_ADMIN', 'ADMINISTRATOR', 'ORGANISER', 'FACULTY_COORDINATOR'].includes(roleCode);
+  const roleDescription = getRoleDescription(roleCode);
 
   return (
-    <div className="dashboard-page dashboard-shell-page">
-      <section className="dashboard-page__hero dashboard-shell-page__hero">
-        <div className="dashboard-shell-page__hero-copy">
+    <div className="dashboard-home">
+      <section className="dashboard-home__hero">
+        <div className="dashboard-home__hero-copy">
           <Badge tone="neutral">Dashboard</Badge>
           <h1>{roleLabel} workspace</h1>
-          <p>{getRoleDescription(roleCode)}. This shell stays honest about the backend state while still feeling like a real product.</p>
+          <p>{roleDescription}. This is the control centre for your current session, with honest empty states and clear actions.</p>
+          <div className="dashboard-home__hero-actions">
+            <Button as={Link} to={`${APP_ROUTES.dashboard}/events`}>
+              Open events
+            </Button>
+            <Button as={Link} variant="secondary" to={`${APP_ROUTES.dashboard}/notifications`}>
+              View updates
+            </Button>
+          </div>
         </div>
-        <div className="dashboard-page__hero-actions">
-          <StatusIndicator tone={errorMessage ? 'warning' : 'success'} label={errorMessage ? 'Backend unavailable' : 'Protected session active'} />
-          <Button as={Link} variant="secondary" size="sm" to={APP_ROUTES.home}>
-            Open public site
-          </Button>
-          <RoleBadge role={roleCode} />
-        </div>
+
+        <Card elevated className="dashboard-home__hero-panel">
+          <div className="dashboard-home__hero-panel-head">
+            <div>
+              <Badge tone="neutral">Workspace health</Badge>
+              <strong>Protected session active</strong>
+            </div>
+            <RoleBadge role={roleCode} />
+          </div>
+          <div className="dashboard-home__identity">
+            <ProfileCard user={currentProfile} />
+          </div>
+        </Card>
       </section>
 
       {errorMessage && <ErrorState title="Backend unavailable" description={errorMessage} onRetry={() => window.location.reload()} />}
 
-      <div className="dashboard-page__grid dashboard-shell-page__grid">
-        <Card elevated className="dashboard-page__profile">
-          <div className="dashboard-page__section-header">
-            <div>
-              <Badge tone="neutral">Current profile</Badge>
-              <h2>{buildDisplayName(currentProfile)}</h2>
-              <p className="dashboard-page__muted">{currentProfile?.email ?? 'Session restored locally'}</p>
+      <section className="dashboard-home__metrics">
+        {overviewMetrics.map(metric => (
+          <MetricCard key={metric.label} {...metric} />
+        ))}
+      </section>
+
+      <section className="dashboard-home__grid">
+        <Card elevated className="dashboard-home__board dashboard-home__board--wide">
+          <SectionHeading
+            eyebrow="Today"
+            title="A compact overview of the current workspace."
+            description="Use this space for activity, upcoming work, and the status of the signed-in role."
+          />
+          {loading ? (
+            <LoadingSkeleton lines={5} />
+          ) : (
+            <div className="dashboard-home__board-grid">
+              <div className="dashboard-home__stack">
+                <div className="dashboard-home__callout">
+                  <span>Profile completion</span>
+                  <strong>{completion}%</strong>
+                  <p>The profile reads from the current session and remains honest when the backend is offline.</p>
+                </div>
+                <div className="dashboard-home__callout dashboard-home__callout--soft">
+                  <span>Role scope</span>
+                  <strong>{roleLabel}</strong>
+                  <p>{roleDescription}</p>
+                </div>
+              </div>
+              <Timeline items={timelineItems} />
             </div>
-            <RoleBadge role={roleCode} />
-          </div>
-
-          {loading ? <LoadingSkeleton lines={5} /> : <ProfileCard user={currentProfile} />}
-
-          <div className="dashboard-page__profile-actions">
-            <Button as={Link} to={APP_ROUTES.profileSetup} variant="secondary" size="sm">
-              Complete profile
-            </Button>
-            <Button as={Link} to={`${APP_ROUTES.home}#security`} size="sm">
-              Review security model
-            </Button>
-          </div>
+          )}
         </Card>
 
-        <div className="dashboard-page__stack">
-          <Card>
-            <div className="dashboard-page__section-header">
-              <div>
-                <Badge tone="neutral">Profile completion</Badge>
-                <h2>{completion}%</h2>
-              </div>
-            </div>
-            <p className="dashboard-page__muted">
-              The shell reads the current user endpoint when it is available and falls back to cached session data when the backend is offline.
-            </p>
-          </Card>
-
-          <Card>
-            <div className="dashboard-page__section-header">
-              <div>
-                <Badge tone="neutral">Workspace summary</Badge>
-                <h2>Ready state</h2>
-              </div>
-            </div>
-            <div className="dashboard-page__stats">
-              {summaryCards.map(stat => (
-                <div key={stat.label} className="dashboard-page__stat">
-                  <strong>{stat.value}</strong>
-                  <span>{stat.label}</span>
-                  <p className="dashboard-page__muted">{stat.detail}</p>
-                </div>
+        <div className="dashboard-home__column">
+          <Card className="dashboard-home__board">
+            <SectionHeading eyebrow="Quick actions" title="Move straight to the right surface." />
+            <div className="dashboard-home__action-list">
+              {quickActions.map(([label, to]) => (
+                <Button key={label} as={Link} variant="secondary" to={to}>
+                  {label}
+                </Button>
               ))}
             </div>
           </Card>
+
+          <Card className="dashboard-home__board">
+            <SectionHeading eyebrow="Upcoming" title="No live activity yet." description="The empty state stays useful until the backend has real items to show." />
+            <EmptyState
+              title="No upcoming registrations yet."
+              description="As event data arrives, this area will surface live items rather than fake counts."
+              actionLabel="Browse events"
+              onAction={() => window.location.assign(`${APP_ROUTES.dashboard}/events`)}
+            />
+          </Card>
         </div>
-      </div>
+      </section>
 
-      <div className="card-grid card-grid--two dashboard-shell-page__content-grid">
-        <Card elevated className="section-panel">
-          <div className="section-panel__title">
-            <strong>Upcoming events</strong>
-            <Badge tone="neutral">Empty state</Badge>
-          </div>
-          <EmptyState
-            title="No upcoming registrations yet."
-            description="Explore events once the event catalogue is available and participant workflows are connected."
-          />
-        </Card>
-
-        <Card elevated className="section-panel">
-          <div className="section-panel__title">
-            <strong>Recent activity</strong>
-            <Badge tone="neutral">Honest placeholder</Badge>
-          </div>
-          <div className="dashboard-page__quick-actions">
-            {activityNotes.map(note => (
-              <div key={note} className="workflow-step dashboard-shell-page__activity">
-                <span className="workflow-step__index">*</span>
-                <div className="workflow-step__copy">
-                  <strong>{note}</strong>
-                  <span>Shown until live backend events are available.</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-
-      <div className="card-grid card-grid--two dashboard-shell-page__content-grid">
-        <Card className="section-panel">
-          <div className="section-panel__title">
-            <strong>Quick actions</strong>
-            <Badge tone="neutral">Navigation</Badge>
-          </div>
-          <div className="dashboard-page__links">
-            <Button as={Link} variant="secondary" to={APP_ROUTES.profileSetup}>
-              Complete profile
-            </Button>
-            <Button as={Link} variant="secondary" to={`${APP_ROUTES.home}#features`}>
-              Review platform features
-            </Button>
-            <Button as={Link} variant="secondary" to={APP_ROUTES.login}>
-              Switch account
-            </Button>
-          </div>
-        </Card>
-
-        <Card className="section-panel">
-          <div className="section-panel__title">
-            <strong>Account health</strong>
-            <Badge tone={isPrivileged ? 'success' : 'neutral'}>Role aware</Badge>
-          </div>
-          <ul className="dashboard-page__list">
-            <li>Login and logout flows are ready for live backend integration.</li>
-            <li>Password recovery, refresh token, and protected route logic stay in place.</li>
-            <li>Role-specific dashboard areas can expand without redesigning the shell.</li>
+      <section className="dashboard-home__grid dashboard-home__grid--secondary">
+        <Card className="dashboard-home__board">
+          <SectionHeading eyebrow="Role state" title="What this workspace is ready for." />
+          <ul className="dashboard-home__list">
+            <li>Login, logout, and refresh flows are in place.</li>
+            <li>Protected routes and institution-aware sections stay intact.</li>
+            <li>Future event, registration, and master-data pages can slot into the shell cleanly.</li>
           </ul>
         </Card>
-      </div>
+
+        <Card className="dashboard-home__board">
+          <SectionHeading eyebrow="Session" title="Current profile" />
+          <div className="dashboard-home__profile-copy">
+            <strong>{buildDisplayName(currentProfile)}</strong>
+            <span>{currentProfile?.email ?? 'Session restored locally'}</span>
+          </div>
+          <div className="dashboard-home__profile-actions">
+            <Button as={Link} variant="secondary" to={APP_ROUTES.profileSetup} size="sm">
+              Complete profile
+            </Button>
+            <Button as={Link} variant="secondary" to={APP_ROUTES.home} size="sm">
+              Open public site
+            </Button>
+          </div>
+        </Card>
+      </section>
     </div>
   );
 }

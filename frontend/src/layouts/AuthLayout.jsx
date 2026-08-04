@@ -1,60 +1,64 @@
 import { Outlet } from 'react-router-dom';
+import BrandMark from '../components/BrandMark';
 import Badge from '../components/Badge';
 import Card from '../components/Card';
-import StatusIndicator from '../components/StatusIndicator';
+import MetricCard from '../components/MetricCard';
+import Timeline from '../components/Timeline';
 
-const highlights = [
-  {
-    title: 'JWT-ready authentication pipeline',
-    detail: 'Structured login, logout, session refresh, and password recovery flows share one API layer.'
-  },
-  {
-    title: 'Role-aware access control',
-    detail: 'Students, faculty coordinators, organisers, and administrators can use different dashboards later.'
-  },
-  {
-    title: 'Offline-safe public pages',
-    detail: 'Landing, login, and recovery screens remain visible even when the backend is unavailable.'
-  }
+const pillars = [
+  { label: 'Secure entry', value: 'JWT-ready', detail: 'Login, recovery, and protected routes share one session model.', tone: 'neutral' },
+  { label: 'Role routing', value: 'Role aware', detail: 'Administrators, organisers, faculty, and students keep separate paths.', tone: 'neutral' },
+  { label: 'Offline-safe', value: 'Public first', detail: 'Landing and auth pages remain visible even when the backend is unavailable.', tone: 'success' }
 ];
 
-const accessNotes = [
-  'Email, register number, or employee ID sign-in',
-  'Password recovery with user-friendly error states',
-  'Clean mobile forms with visible focus states'
+const steps = [
+  { title: 'Sign in', description: 'Use email, register number, or employee ID to access the workspace.', icon: 'shield', tone: 'neutral' },
+  { title: 'Review profile', description: 'Complete profile details before event and registration workflows unlock.', icon: 'usersSquare', tone: 'neutral' },
+  { title: 'Continue safely', description: 'Password reset, session refresh, and protected routes stay consistent.', icon: 'clock', tone: 'success' }
 ];
 
 export default function AuthLayout() {
   return (
-    <div className="auth-layout">
-      <section className="auth-layout__intro">
-        <Badge tone="neutral">CampusSphere Access</Badge>
-        <h1>Secure entry points for every role in the platform.</h1>
-        <p>
-          CampusSphere keeps sign-in, registration, password recovery, and profile setup in one consistent experience so the
-          authentication layer feels like part of the product rather than a detached form set.
-        </p>
-        <div className="auth-layout__highlights">
-          {highlights.map(item => (
-            <Card key={item.title} className="auth-layout__highlight">
-              <strong>{item.title}</strong>
-              <span>{item.detail}</span>
-            </Card>
+    <div className="auth-shell">
+      <section className="auth-shell__panel">
+        <div className="auth-shell__glow auth-shell__glow--one" aria-hidden="true" />
+        <div className="auth-shell__glow auth-shell__glow--two" aria-hidden="true" />
+
+        <div className="auth-shell__brand">
+          <BrandMark />
+          <Badge tone="neutral">CampusSphere access</Badge>
+        </div>
+
+        <div className="auth-shell__hero">
+          <p className="auth-shell__eyebrow">Built for colleges, organisers, and students</p>
+          <h1>One signed-in workspace for every event journey.</h1>
+          <p>
+            CampusSphere keeps authentication, onboarding, and future event workflows aligned so the experience feels like
+            part of a single product instead of a detached form stack.
+          </p>
+        </div>
+
+        <div className="auth-shell__metrics">
+          {pillars.map(item => (
+            <MetricCard key={item.label} {...item} />
           ))}
         </div>
-        <div className="auth-layout__panel-card">
-          <StatusIndicator tone="success" label="Backend-ready architecture" />
-          <ul className="feature-list">
-            {accessNotes.map(item => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </div>
+
+        <Card className="auth-shell__board" elevated>
+          <div className="auth-shell__board-head">
+            <div>
+              <Badge tone="neutral">Access path</Badge>
+              <h2>What happens after sign-in</h2>
+            </div>
+            <Badge tone="success">Protected</Badge>
+          </div>
+          <Timeline items={steps} />
+        </Card>
       </section>
 
-      <div className="auth-layout__panel">
+      <section className="auth-shell__surface">
         <Outlet />
-      </div>
+      </section>
     </div>
   );
 }

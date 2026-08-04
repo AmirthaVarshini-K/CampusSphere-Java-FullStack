@@ -1,6 +1,9 @@
 import { Link, NavLink } from 'react-router-dom';
 import Avatar from './Avatar';
+import Badge from './Badge';
 import Button from './Button';
+import BrandMark from './BrandMark';
+import Icon from './Icon';
 import RoleBadge from './RoleBadge';
 import { classNames } from '../utils/classNames';
 import { APP_ROUTES } from '../constants/routes';
@@ -10,71 +13,71 @@ export default function Sidebar({ brand, items, collapsed = false, onNavigate, o
   const roleCode = getPrimaryRole(user);
   const groups = items.reduce((acc, item) => {
     const group = item.group ?? 'Workspace';
-    if (!acc.some(entry => entry.group === group)) {
-      acc.push({ group, items: [] });
+    let entry = acc.find(current => current.group === group);
+    if (!entry) {
+      entry = { group, items: [] };
+      acc.push(entry);
     }
-    acc.find(entry => entry.group === group).items.push(item);
+    entry.items.push(item);
     return acc;
   }, []);
 
   return (
-    <aside className={classNames('sidebar', collapsed && 'sidebar--collapsed')}>
-      <div className="sidebar__header">
-        <div className="sidebar__header-top">
-          <Link to={APP_ROUTES.dashboard} className="sidebar__brand" onClick={onNavigate}>
-            <span className="sidebar__logo" aria-hidden="true">
-              C
-            </span>
-            <span className="sidebar__brand-copy">
-              <strong>{brand}</strong>
-              <small>{getRoleDescription(roleCode)}</small>
-            </span>
-          </Link>
-          {onClose && (
-            <Button variant="secondary" size="sm" className="navbar__mobile-close" onClick={onClose} aria-label="Close navigation">
-              Close
-            </Button>
-          )}
-        </div>
-
-        <div className="sidebar__profile">
-          <Avatar src={user?.profilePictureUrl} name={buildDisplayName(user)} />
-          <div>
-            <strong>{buildDisplayName(user)}</strong>
-            <p>{user?.email ?? 'Connected session'}</p>
-          </div>
-        </div>
-
-        <RoleBadge role={roleCode} />
+    <aside className={classNames('app-sidebar', collapsed && 'app-sidebar--collapsed')}>
+      <div className="app-sidebar__brand">
+        <Link to={APP_ROUTES.dashboard} className="app-sidebar__brand-link" onClick={onNavigate}>
+          <BrandMark compact />
+        </Link>
+        {onClose && (
+          <Button variant="secondary" size="sm" className="app-sidebar__close" onClick={onClose} aria-label="Close navigation">
+            <Icon name="chevronDown" />
+          </Button>
+        )}
       </div>
 
-      <nav className="sidebar__nav" aria-label="Primary">
+      <div className="app-sidebar__identity">
+        <Avatar src={user?.profilePictureUrl} name={buildDisplayName(user)} />
+        <div>
+          <strong>{buildDisplayName(user)}</strong>
+          <span>{user?.email ?? 'Connected session'}</span>
+        </div>
+      </div>
+
+      <div className="app-sidebar__role">
+        <Badge tone="neutral">{brand}</Badge>
+        <RoleBadge role={roleCode} />
+        <p>{getRoleDescription(roleCode)}</p>
+      </div>
+
+      <nav className="app-sidebar__nav" aria-label="Primary">
         {groups.map(group => (
-          <div key={group.group} className="sidebar__group">
-            <span className="sidebar__group-label">{group.group}</span>
-            <div className="sidebar__group-links">
+          <section key={group.group} className="app-sidebar__group">
+            <span className="app-sidebar__group-label">{group.group}</span>
+            <div className="app-sidebar__links">
               {group.items.map(item => (
                 <NavLink
                   key={item.path}
                   to={item.path}
-                  className={({ isActive }) => classNames('sidebar__link', isActive && 'sidebar__link--active')}
+                  className={({ isActive }) => classNames('app-sidebar__link', isActive && 'app-sidebar__link--active')}
                   onClick={onNavigate}
                 >
+                  <Icon name={item.icon} size={17} />
                   <span>{item.label}</span>
                 </NavLink>
               ))}
             </div>
-          </div>
+          </section>
         ))}
       </nav>
 
-      <div className="sidebar__note">
-        <span>Protected workspace</span>
-        <small>All restricted actions remain behind JWT and role checks.</small>
+      <div className="app-sidebar__panel">
+        <strong>Protected workspace</strong>
+        <p>All restricted actions remain behind JWT, institution scope, and role checks.</p>
       </div>
 
-      <div className="sidebar__footer">
-        <Button variant="secondary" size="sm" className="sidebar__logout" onClick={onLogout}>
+      <div className="app-sidebar__footer">
+        <Button variant="secondary" size="sm" className="app-sidebar__logout" onClick={onLogout}>
+          <Icon name="logout" size={16} />
           Logout
         </Button>
       </div>

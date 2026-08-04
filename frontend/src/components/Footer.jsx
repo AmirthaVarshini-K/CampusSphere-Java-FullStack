@@ -1,43 +1,64 @@
 import { Link } from 'react-router-dom';
 import { APP_ROUTES } from '../constants/routes';
+import BrandMark from './BrandMark';
+import Icon from './Icon';
+
+const columns = [
+  {
+    title: 'Platform',
+    links: [
+      { label: 'Home', to: APP_ROUTES.home },
+      { label: 'Features', to: `${APP_ROUTES.home}#platform` },
+      { label: 'For institutions', to: `${APP_ROUTES.home}#institutions` },
+      { label: 'For students', to: `${APP_ROUTES.home}#students` }
+    ]
+  },
+  {
+    title: 'Account',
+    links: [
+      { label: 'Login', to: APP_ROUTES.login },
+      { label: 'Register', to: APP_ROUTES.register },
+      { label: 'Forgot password', to: APP_ROUTES.forgotPassword }
+    ]
+  },
+  {
+    title: 'Project',
+    links: [
+      { label: 'Architecture', to: `${APP_ROUTES.home}#platform` },
+      { label: 'Not found', to: '/404' },
+      { label: 'Unauthorized', to: APP_ROUTES.unauthorized }
+    ]
+  }
+];
 
 export default function Footer() {
   return (
-    <footer className="footer">
-      <div className="footer__brand">
-        <strong>CampusSphere</strong>
-        <p>Built for colleges that need a calm, scalable way to run symposiums, workshops, and student events.</p>
+    <footer className="site-footer">
+      <div className="site-footer__brand">
+        <BrandMark compact />
+        <p>CampusSphere is built for colleges that want a calmer, more organised way to run events.</p>
       </div>
 
-      <div className="footer__column">
-        <span className="footer__title">Platform</span>
-        <div className="footer__links">
-          <Link to={APP_ROUTES.home}>Home</Link>
-          <Link to={`${APP_ROUTES.home}#features`}>Features</Link>
-          <Link to={`${APP_ROUTES.home}#institutions`}>For institutions</Link>
-          <Link to={`${APP_ROUTES.home}#students`}>For students</Link>
+      {columns.map(column => (
+        <div key={column.title} className="site-footer__column">
+          <strong>{column.title}</strong>
+          <nav>
+            {column.links.map(link => (
+              <Link key={link.label} to={link.to}>
+                {link.label}
+              </Link>
+            ))}
+          </nav>
         </div>
-      </div>
+      ))}
 
-      <div className="footer__column">
-        <span className="footer__title">Resources</span>
-        <div className="footer__links">
-          <Link to={APP_ROUTES.login}>Login</Link>
-          <Link to={APP_ROUTES.register}>Register</Link>
-          <Link to={APP_ROUTES.forgotPassword}>Forgot password</Link>
-        </div>
+      <div className="site-footer__meta">
+        <span>
+          <Icon name="spark" size={14} />
+          Enterprise foundation build
+        </span>
+        <p>Prepared for future event, registration, and analytics modules without redesigning the product.</p>
       </div>
-
-      <div className="footer__column">
-        <span className="footer__title">Project</span>
-        <div className="footer__links">
-          <Link to={`${APP_ROUTES.home}#features`}>Architecture</Link>
-          <Link to="/404">404</Link>
-          <span>Enterprise foundation build</span>
-        </div>
-      </div>
-
-      <span className="footer__meta">CampusSphere foundation prepared for future authentication, event, and reporting modules.</span>
     </footer>
   );
 }
