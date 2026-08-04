@@ -132,6 +132,70 @@ async function buildFrontend() {
               return { path: toVirtualPath(resolved), namespace: 'campussphere-file' };
             }
 
+            if (args.path === 'react') {
+              const resolved = path.join(projectDir, 'node_modules', 'react', 'index.js');
+              return {
+              path: toVirtualPath(resolved),
+    namespace: 'campussphere-file'
+  };
+}
+
+if (args.path === 'react/jsx-runtime') {
+  const resolved = path.join(
+    projectDir,
+    'node_modules',
+    'react',
+    'jsx-runtime.js'
+  );
+
+  return {
+    path: toVirtualPath(resolved),
+    namespace: 'campussphere-file'
+  };
+}
+
+if (args.path === 'react/jsx-dev-runtime') {
+  const resolved = path.join(
+    projectDir,
+    'node_modules',
+    'react',
+    'jsx-dev-runtime.js'
+  );
+
+  return {
+    path: toVirtualPath(resolved),
+    namespace: 'campussphere-file'
+  };
+}
+
+if (args.path === 'react-dom') {
+  const resolved = path.join(
+    projectDir,
+    'node_modules',
+    'react-dom',
+    'index.js'
+  );
+
+  return {
+    path: toVirtualPath(resolved),
+    namespace: 'campussphere-file'
+  };
+}
+
+if (args.path === 'react-dom/client') {
+  const resolved = path.join(
+    projectDir,
+    'node_modules',
+    'react-dom',
+    'client.js'
+  );
+
+  return {
+    path: toVirtualPath(resolved),
+    namespace: 'campussphere-file'
+  };
+}
+
             if (args.path.startsWith('.') || args.path.startsWith('/')) {
               const importerPath = args.importer ? toRealPath(args.importer) : projectDir;
               const resolved = resolveRealFile(path.resolve(path.dirname(importerPath), args.path));

@@ -74,6 +74,29 @@ public final class RegistrationDtos {
             String message
     ) {}
 
+    public record RegistrationConflictResponse(
+            Long eventId,
+            String eventTitle,
+            LocalDateTime eventStartDateTime,
+            LocalDateTime eventEndDateTime,
+            String affectedParticipantName,
+            String explanation
+    ) {}
+
+    public record RegistrationPreviewResponse(
+            Long eventId,
+            String eventTitle,
+            RegistrationType registrationType,
+            boolean registrationOpen,
+            boolean duplicateRegistration,
+            boolean capacityAvailable,
+            boolean waitlistEnabled,
+            RegistrationStatus expectedStatus,
+            Integer waitlistPosition,
+            List<RegistrationConflictResponse> conflicts,
+            List<String> messages
+    ) {}
+
     public record RegistrationDashboardResponse(
             long total,
             long approved,
@@ -143,6 +166,8 @@ public final class RegistrationDtos {
             String message,
             String relatedEntityType,
             Long relatedEntityId,
+            String targetRoute,
+            String severity,
             LocalDateTime readAt,
             Instant createdAt,
             Instant updatedAt

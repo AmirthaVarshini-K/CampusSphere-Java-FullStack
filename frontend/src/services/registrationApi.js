@@ -16,17 +16,32 @@ export const registrationApi = {
   listMyRegistrations(params) {
     return apiClient.get('/registrations/me', buildQuery(params));
   },
+  listWaitlist(params) {
+    return apiClient.get('/registrations/waitlist', buildQuery(params));
+  },
+  listMyWaitlist() {
+    return apiClient.get('/registrations/me/waitlist');
+  },
   getEventRegistrationContext(eventId) {
     return apiClient.get(`/events/${eventId}/registration-context`);
   },
   getEventRegistrationForm(eventId) {
     return apiClient.get(`/events/${eventId}/registration-form`);
   },
+  previewRegistration(eventId, payload) {
+    return apiClient.post(`/events/${eventId}/registration-preview`, payload);
+  },
   registerForEvent(eventId, payload) {
     return apiClient.post(`/events/${eventId}/register`, payload);
   },
   createTeam(eventId, payload) {
     return apiClient.post(`/events/${eventId}/teams`, payload);
+  },
+  listMyTeams() {
+    return apiClient.get('/teams/me');
+  },
+  listMyTeamInvitations() {
+    return apiClient.get('/team-invitations/me');
   },
   listTeams(eventId) {
     return apiClient.get(`/events/${eventId}/teams`);
@@ -55,10 +70,34 @@ export const registrationApi = {
   cancelRegistration(registrationId) {
     return apiClient.post(`/registrations/${registrationId}/cancel`);
   },
-  listNotifications() {
-    return apiClient.get('/notifications');
+  listNotifications(params) {
+    return apiClient.get('/notifications', buildQuery(params));
+  },
+  getUnreadNotificationCount() {
+    return apiClient.get('/notifications/unread-count');
+  },
+  markAllNotificationsRead() {
+    return apiClient.post('/notifications/mark-all-read');
   },
   markNotificationRead(id) {
     return apiClient.patch(`/notifications/${id}/read`);
+  },
+  promoteWaitlistEntry(registrationId) {
+    return apiClient.post(`/registrations/${registrationId}/promote`);
+  },
+  listTeamInvitations(teamId) {
+    return apiClient.get(`/teams/${teamId}/invitations`);
+  },
+  updateTeam(teamId, payload) {
+    return apiClient.put(`/teams/${teamId}`, payload);
+  },
+  cancelInvitation(invitationId) {
+    return apiClient.post(`/team-invitations/${invitationId}/cancel`);
+  },
+  removeTeamMember(teamId, memberId) {
+    return apiClient.post(`/teams/${teamId}/members/${memberId}/remove`);
+  },
+  deleteTeam(teamId) {
+    return apiClient.post(`/teams/${teamId}/delete`);
   }
 };

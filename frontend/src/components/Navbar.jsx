@@ -15,7 +15,9 @@ export default function Navbar({
   user,
   onLogout,
   pageTitle,
-  pageBreadcrumb
+  pageBreadcrumb,
+  pageDescription,
+  unreadCount = 0
 }) {
   const location = useLocation();
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -28,14 +30,20 @@ export default function Navbar({
     const roleCode = getPrimaryRole(user);
     const routeTitle = location.pathname.startsWith('/dashboard/events')
       ? (location.pathname.includes('/register')
-        ? { breadcrumb: 'CampusSphere / Registrations', title: 'Event Registration' }
-        : { breadcrumb: 'CampusSphere / Events', title: 'Events' })
-      : location.pathname.startsWith('/dashboard/registrations')
-        ? { breadcrumb: 'CampusSphere / Registrations', title: 'Registrations' }
-        : location.pathname.startsWith('/dashboard/institution-setup')
-        ? { breadcrumb: 'CampusSphere / Institution Setup', title: 'Institution Setup' }
-        : null;
-    const resolvedTitle = routeTitle ?? { breadcrumb: pageBreadcrumb ?? 'CampusSphere workspace', title: pageTitle ?? 'Dashboard' };
+        ? { breadcrumb: 'CampusSphere / Registrations', title: 'Event Registration', description: 'Complete the selected event registration without leaving the workspace.' }
+        : { breadcrumb: 'CampusSphere / Events', title: 'Events', description: 'Manage events, sessions, venues, coordinators, and publication state.' })
+      : location.pathname.startsWith('/dashboard/notifications')
+        ? { breadcrumb: 'CampusSphere / Notifications', title: 'Notifications', description: 'Stay on top of updates, invites, and approval changes.' }
+        : location.pathname.startsWith('/dashboard/registrations')
+          ? { breadcrumb: 'CampusSphere / Registrations', title: 'Registrations', description: 'Review participant records, waitlists, teams, and decisions.' }
+          : location.pathname.startsWith('/dashboard/institution-setup')
+            ? { breadcrumb: 'CampusSphere / Institution Setup', title: 'Institution Setup', description: 'Maintain master data that powers the rest of the platform.' }
+            : null;
+    const resolvedTitle = routeTitle ?? {
+      breadcrumb: pageBreadcrumb ?? 'CampusSphere workspace',
+      title: pageTitle ?? 'Dashboard',
+      description: pageDescription ?? 'An authenticated workspace for the current role.'
+    };
 
     return (
       <header className="navbar navbar--dashboard">
@@ -56,9 +64,22 @@ export default function Navbar({
             <Link to={APP_ROUTES.dashboard} className="navbar__brand">
               {resolvedTitle.title}
             </Link>
+            <p className="navbar__subtitle">{resolvedTitle.description}</p>
           </div>
         </div>
         <div className="navbar__actions navbar__actions--dashboard">
+          <Button
+            as={Link}
+            variant="secondary"
+            size="sm"
+            className="navbar__notification"
+            to={`${APP_ROUTES.dashboard}/notifications`}
+            aria-label={`Unread notifications: ${unreadCount}`}
+          >
+            <span className="navbar__notification-icon" aria-hidden="true">*</span>
+            <span>Notifications</span>
+            <strong>{unreadCount}</strong>
+          </Button>
           <div className="navbar__profile">
             <Avatar src={user?.profilePictureUrl} name={user?.fullName} />
             <div className="navbar__profile-copy">

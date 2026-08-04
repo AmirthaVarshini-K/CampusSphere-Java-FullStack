@@ -110,7 +110,9 @@ CREATE TABLE IF NOT EXISTS event_registrations (
     CONSTRAINT fk_event_registrations_participant FOREIGN KEY (participant_user_id) REFERENCES users (id),
     CONSTRAINT fk_event_registrations_approved_by FOREIGN KEY (approved_by_user_id) REFERENCES users (id),
     CONSTRAINT fk_event_registrations_team FOREIGN KEY (team_id) REFERENCES teams (id),
-    CONSTRAINT uk_event_registrations_event_participant UNIQUE (event_id, participant_user_id)
+    CONSTRAINT uk_event_registrations_event_participant UNIQUE (event_id, participant_user_id),
+    CONSTRAINT uk_event_registrations_registration_number UNIQUE (registration_number),
+    CONSTRAINT uk_event_registrations_event_waitlist_position UNIQUE (event_id, waitlist_position)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_event_registrations_institution_id ON event_registrations (institution_id);

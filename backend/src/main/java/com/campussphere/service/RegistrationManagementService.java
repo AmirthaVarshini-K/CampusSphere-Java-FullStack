@@ -3,10 +3,12 @@ package com.campussphere.service;
 import com.campussphere.dto.PageResponse;
 import com.campussphere.dto.registration.RegistrationDtos.EventRegistrationFormResponse;
 import com.campussphere.dto.registration.RegistrationDtos.NotificationResponse;
+import com.campussphere.dto.registration.RegistrationDtos.RegistrationConflictResponse;
 import com.campussphere.dto.registration.RegistrationDtos.RegistrationContextResponse;
 import com.campussphere.dto.registration.RegistrationDtos.RegistrationDashboardResponse;
 import com.campussphere.dto.registration.RegistrationDtos.RegistrationDecisionRequest;
 import com.campussphere.dto.registration.RegistrationDtos.RegistrationRequest;
+import com.campussphere.dto.registration.RegistrationDtos.RegistrationPreviewResponse;
 import com.campussphere.dto.registration.RegistrationDtos.RegistrationSummaryResponse;
 import com.campussphere.dto.registration.RegistrationDtos.TeamInvitationRequest;
 import com.campussphere.dto.registration.RegistrationDtos.TeamInvitationResponse;
@@ -53,11 +55,14 @@ import com.campussphere.repository.TeamRepository;
 import com.campussphere.repository.UserRepository;
 import com.campussphere.service.support.CurrentUserContext;
 import com.campussphere.service.support.InstitutionScopeResolver;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -136,7 +141,7 @@ public class RegistrationManagementService {
         return buildContext(event);
     }
 
-    public EventRegistration register(String email, Long eventId, RegistrationRequest request) {
+    public RegistrationSummaryResponse register(String email, Long eventId, RegistrationRequest request) {
         User user = requireCurrentUser(email);
         Event event = requireEvent(eventId);
         scopeResolver.resolveForWrite(user, event.getInstitution().getId());
@@ -157,12 +162,67 @@ public class RegistrationManagementService {
         }
 
         EventRegistration registration = createRegistration(event, user, request.registrationType(), team, request.remarks(), config);
-        registrationRepository.save(registration);
+        saveRegistration(registration);
         notifyForRegistration(registration);
-        return registration;
+        return toRegistrationSummary(registration);
     }
 
-    public Team createTeam(String email, Long eventId, TeamRequest request) {
+    @Transactional(readOnly = true)
+    public RegistrationPreviewResponse previewRegistration(String email, Long eventId, RegistrationRequest request) {
+        User user = requireCurrentUser(email);
+        Event event = requireEvent(eventId);
+        scopeResolver.resolveForRead(user, event.getInstitution().getId());
+        EventRegistrationConfig config = getConfig(event);
+        boolean registrationOpen = isRegistrationOpen(event, config);
+        boolean duplicate = registrationRepository.existsByEvent_IdAndParticipant_IdAndDeletedFalse(event.getId(), user.getId());
+        List<RegistrationConflictResponse> conflicts = findConflicts(user, event);
+        boolean waitlistEnabled = config != null && config.isWaitlistEnabled();
+        boolean capacityAvailable = !isAtCapacity(event, null);
+        RegistrationStatus expectedStatus = !registrationOpen
+                ? null
+                : duplicate || !conflicts.isEmpty()
+                ? null
+                : config != null && config.isApprovalRequired()
+                ? RegistrationStatus.PENDING
+                : capacityAvailable
+                ? RegistrationStatus.APPROVED
+                : waitlistEnabled
+                ? RegistrationStatus.WAITLISTED
+                : null;
+        Integer waitlistPosition = expectedStatus == RegistrationStatus.WAITLISTED ? nextWaitlistPosition(event) : null;
+        List<String> messages = new ArrayList<>();
+        if (!registrationOpen) {
+            messages.add("Registration is currently closed for this event.");
+        }
+        if (duplicate) {
+            messages.add("You are already registered for this event.");
+        }
+        if (!conflicts.isEmpty()) {
+            messages.add("You are already registered for another event during this time.");
+        }
+        if (expectedStatus == RegistrationStatus.WAITLISTED) {
+            messages.add("The event is full, so the next registration will be placed on the waitlist.");
+        } else if (expectedStatus == RegistrationStatus.APPROVED) {
+            messages.add("A seat is available for immediate approval.");
+        } else if (expectedStatus == RegistrationStatus.PENDING) {
+            messages.add("The event requires approval before the registration is confirmed.");
+        }
+        return new RegistrationPreviewResponse(
+                event.getId(),
+                event.getTitle(),
+                request.registrationType(),
+                registrationOpen,
+                duplicate,
+                capacityAvailable,
+                waitlistEnabled,
+                expectedStatus,
+                waitlistPosition,
+                conflicts,
+                messages
+        );
+    }
+
+    public TeamResponse createTeam(String email, Long eventId, TeamRequest request) {
         User user = requireCurrentUser(email);
         Event event = requireEvent(eventId);
         scopeResolver.resolveForWrite(user, event.getInstitution().getId());
@@ -173,10 +233,26 @@ public class RegistrationManagementService {
         ensureRegistrationOpen(event, config);
         Team team = createTeamInternal(event, user, request.teamName(), request.teamCode());
         addTeamMember(team, user, TeamMemberRole.LEADER);
-        return team;
+        return toTeamResponse(team);
     }
 
-    public TeamInvitation inviteMember(String email, Long teamId, TeamInvitationRequest request) {
+    public List<TeamResponse> listMyTeams(String email) {
+        User user = requireCurrentUser(email);
+        return teamMemberRepository.findByUser_IdAndDeletedFalseOrderByJoinedAtDesc(user.getId()).stream()
+                .map(TeamMember::getTeam)
+                .filter(team -> team != null && !team.isDeleted())
+                .map(this::toTeamResponse)
+                .toList();
+    }
+
+    public List<TeamInvitationResponse> listMyInvitations(String email) {
+        User user = requireCurrentUser(email);
+        return invitationRepository.findByInvitedUser_IdAndDeletedFalseOrderByInvitedAtDesc(user.getId()).stream()
+                .map(this::toInvitationResponse)
+                .toList();
+    }
+
+    public TeamInvitationResponse inviteMember(String email, Long teamId, TeamInvitationRequest request) {
         User user = requireCurrentUser(email);
         Team team = requireTeam(teamId);
         scopeResolver.resolveForWrite(user, team.getInstitution().getId());
@@ -196,12 +272,12 @@ public class RegistrationManagementService {
         invitation.setInvitationStatus(InvitationStatus.PENDING);
         invitation.setInvitedAt(LocalDateTime.now());
         invitation.setMessage(trimToNull(request.message()));
-        invitationRepository.save(invitation);
+        invitationRepository.saveAndFlush(invitation);
         notify(invited, NotificationType.INVITATION_RECEIVED, "Team invitation received", "You were invited to join " + team.getTeamName() + ".", "TeamInvitation", invitation.getId());
-        return invitation;
+        return toInvitationResponse(invitation);
     }
 
-    public TeamInvitation acceptInvitation(String email, Long invitationId) {
+    public TeamInvitationResponse acceptInvitation(String email, Long invitationId) {
         User user = requireCurrentUser(email);
         TeamInvitation invitation = requireInvitation(invitationId);
         if (!Objects.equals(invitation.getInvitedUser().getId(), user.getId())) {
@@ -222,15 +298,15 @@ public class RegistrationManagementService {
 
         invitation.setInvitationStatus(InvitationStatus.ACCEPTED);
         invitation.setRespondedAt(LocalDateTime.now());
-        invitationRepository.save(invitation);
+        invitationRepository.saveAndFlush(invitation);
         addTeamMember(invitation.getTeam(), user, TeamMemberRole.MEMBER);
         EventRegistration registration = createRegistration(event, user, RegistrationType.TEAM, invitation.getTeam(), invitation.getTeam().getTeamName(), config);
-        registrationRepository.save(registration);
+        saveRegistration(registration);
         notify(user, NotificationType.INVITATION_ACCEPTED, "Invitation accepted", "You joined " + invitation.getTeam().getTeamName() + ".", "TeamInvitation", invitation.getId());
-        return invitation;
+        return toInvitationResponse(invitation);
     }
 
-    public TeamInvitation rejectInvitation(String email, Long invitationId) {
+    public TeamInvitationResponse rejectInvitation(String email, Long invitationId) {
         User user = requireCurrentUser(email);
         TeamInvitation invitation = requireInvitation(invitationId);
         if (!Objects.equals(invitation.getInvitedUser().getId(), user.getId())) {
@@ -238,22 +314,22 @@ public class RegistrationManagementService {
         }
         invitation.setInvitationStatus(InvitationStatus.REJECTED);
         invitation.setRespondedAt(LocalDateTime.now());
-        invitationRepository.save(invitation);
+        invitationRepository.saveAndFlush(invitation);
         notify(invitation.getInvitedBy(), NotificationType.INVITATION_REJECTED, "Invitation rejected", invitation.getInvitedUser().getFirstName() + " declined the team invitation.", "TeamInvitation", invitation.getId());
-        return invitation;
+        return toInvitationResponse(invitation);
     }
 
-    public EventRegistration approveRegistration(String email, Long registrationId, RegistrationDecisionRequest request) {
+    public RegistrationSummaryResponse approveRegistration(String email, Long registrationId, RegistrationDecisionRequest request) {
         User user = requireCurrentUser(email);
         EventRegistration registration = requireRegistration(registrationId);
         scopeResolver.resolveForWrite(user, registration.getEvent().getInstitution().getId());
         if (request.status() == RegistrationStatus.REJECTED) {
             registration.setRegistrationStatus(RegistrationStatus.REJECTED);
             registration.setRejectionReason(trimToNull(request.rejectionReason()));
-            registrationRepository.save(registration);
+            registrationRepository.saveAndFlush(registration);
             notify(registration.getParticipant(), NotificationType.REGISTRATION_REJECTED, "Registration rejected", "Your registration for " + registration.getEvent().getTitle() + " was rejected.", "EventRegistration", registration.getId());
             promoteWaitlist(registration.getEvent());
-            return registration;
+            return toRegistrationSummary(registration);
         }
         if (request.status() != RegistrationStatus.APPROVED) {
             throw new BusinessRuleViolationException("Only approved or rejected status changes are supported.");
@@ -272,11 +348,15 @@ public class RegistrationManagementService {
             registration.setApprovedBy(user);
             notify(registration.getParticipant(), NotificationType.REGISTRATION_APPROVED, "Registration approved", "Your registration for " + registration.getEvent().getTitle() + " was approved.", "EventRegistration", registration.getId());
         }
-        registrationRepository.save(registration);
-        return registration;
+        registrationRepository.saveAndFlush(registration);
+        return toRegistrationSummary(registration);
     }
 
-    public EventRegistration cancelRegistration(String email, Long registrationId) {
+    public RegistrationSummaryResponse promoteWaitlistEntry(String email, Long registrationId) {
+        return approveRegistration(email, registrationId, new RegistrationDecisionRequest(RegistrationStatus.APPROVED, null, null));
+    }
+
+    public RegistrationSummaryResponse cancelRegistration(String email, Long registrationId) {
         User user = requireCurrentUser(email);
         EventRegistration registration = requireRegistration(registrationId);
         scopeResolver.resolveForWrite(user, registration.getEvent().getInstitution().getId());
@@ -285,12 +365,13 @@ public class RegistrationManagementService {
         }
         registration.setRegistrationStatus(RegistrationStatus.CANCELLED);
         registration.setWaitlistPosition(null);
-        registrationRepository.save(registration);
+        registrationRepository.saveAndFlush(registration);
+        notify(registration.getParticipant(), NotificationType.REGISTRATION_CANCELLED, "Registration cancelled", "Your registration for " + registration.getEvent().getTitle() + " was cancelled.", "EventRegistration", registration.getId());
         promoteWaitlist(registration.getEvent());
-        return registration;
+        return toRegistrationSummary(registration);
     }
 
-    public TeamMember leaveTeam(String email, Long teamId) {
+    public TeamMemberResponse leaveTeam(String email, Long teamId) {
         User user = requireCurrentUser(email);
         Team team = requireTeam(teamId);
         scopeResolver.resolveForWrite(user, team.getInstitution().getId());
@@ -299,13 +380,78 @@ public class RegistrationManagementService {
         if (member.getRole() == TeamMemberRole.LEADER && teamMemberRepository.countByTeam_IdAndDeletedFalse(teamId) > 1) {
             throw new BusinessRuleViolationException("Transfer team ownership before leaving the team.");
         }
+        if (member.getRole() == TeamMemberRole.LEADER) {
+            invitationRepository.findByTeam_IdAndDeletedFalse(teamId).forEach(invitation -> {
+                invitation.setDeleted(true);
+                invitation.setStatus(RecordStatus.INACTIVE);
+                invitationRepository.save(invitation);
+            });
+            team.setDeleted(true);
+            team.setStatus(RecordStatus.INACTIVE);
+            teamRepository.save(team);
+        }
         member.setDeleted(true);
         member.setStatus(RecordStatus.INACTIVE);
         teamMemberRepository.save(member);
-        return member;
+        return toTeamMemberResponse(member);
     }
 
-    public TeamMember transferTeamOwnership(String email, Long teamId, TeamTransferRequest request) {
+    public TeamResponse updateTeam(String email, Long teamId, TeamRequest request) {
+        User user = requireCurrentUser(email);
+        Team team = requireTeam(teamId);
+        scopeResolver.resolveForWrite(user, team.getInstitution().getId());
+        ensureTeamManager(user, team);
+        String normalizedName = trim(request.teamName());
+        String normalizedCode = trim(request.teamCode());
+        if (teamRepository.existsByEvent_IdAndTeamNameIgnoreCaseAndIdNotAndDeletedFalse(team.getEvent().getId(), normalizedName, teamId)) {
+            throw new DuplicateResourceException("Team name already exists for this event.");
+        }
+        if (teamRepository.existsByEvent_IdAndTeamCodeIgnoreCaseAndIdNotAndDeletedFalse(team.getEvent().getId(), normalizedCode, teamId)) {
+            throw new DuplicateResourceException("Team code already exists for this event.");
+        }
+        team.setTeamName(normalizedName);
+        team.setTeamCode(normalizedCode);
+        teamRepository.saveAndFlush(team);
+        return toTeamResponse(team);
+    }
+
+    public TeamInvitationResponse cancelInvitation(String email, Long invitationId) {
+        User user = requireCurrentUser(email);
+        TeamInvitation invitation = requireInvitation(invitationId);
+        scopeResolver.resolveForWrite(user, invitation.getTeam().getInstitution().getId());
+        if (!Objects.equals(invitation.getInvitedBy().getId(), user.getId()) && !ensureManagerSilently(user, invitation.getTeam())) {
+            throw new BusinessRuleViolationException("You are not allowed to cancel this invitation.");
+        }
+        if (invitation.getInvitationStatus() != InvitationStatus.PENDING) {
+            throw new BusinessRuleViolationException("Only pending invitations can be cancelled.");
+        }
+        invitation.setInvitationStatus(InvitationStatus.CANCELLED);
+        invitation.setRespondedAt(LocalDateTime.now());
+        invitationRepository.saveAndFlush(invitation);
+        notify(invitation.getInvitedUser(), NotificationType.INVITATION_CANCELLED, "Invitation cancelled", "The invitation to join " + invitation.getTeam().getTeamName() + " was cancelled.", "TeamInvitation", invitation.getId());
+        return toInvitationResponse(invitation);
+    }
+
+    public TeamMemberResponse removeTeamMember(String email, Long teamId, Long memberId) {
+        User user = requireCurrentUser(email);
+        Team team = requireTeam(teamId);
+        scopeResolver.resolveForWrite(user, team.getInstitution().getId());
+        ensureTeamManager(user, team);
+        TeamMember member = teamMemberRepository.findByIdAndDeletedFalse(memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("Team member not found."));
+        if (!Objects.equals(member.getTeam().getId(), teamId)) {
+            throw new InvalidInstitutionRelationshipException("The selected member does not belong to this team.");
+        }
+        if (member.getRole() == TeamMemberRole.LEADER) {
+            throw new BusinessRuleViolationException("Transfer leadership before removing the team leader.");
+        }
+        member.setDeleted(true);
+        member.setStatus(RecordStatus.INACTIVE);
+        teamMemberRepository.saveAndFlush(member);
+        return toTeamMemberResponse(member);
+    }
+
+    public TeamMemberResponse transferTeamOwnership(String email, Long teamId, TeamTransferRequest request) {
         User user = requireCurrentUser(email);
         Team team = requireTeam(teamId);
         scopeResolver.resolveForWrite(user, team.getInstitution().getId());
@@ -318,7 +464,7 @@ public class RegistrationManagementService {
         newLeaderMember.setRole(TeamMemberRole.LEADER);
         team.setLeader(newLeader);
         teamRepository.save(team);
-        return newLeaderMember;
+        return toTeamMemberResponse(newLeaderMember);
     }
 
     public void deleteTeam(String email, Long teamId) {
@@ -326,6 +472,11 @@ public class RegistrationManagementService {
         Team team = requireTeam(teamId);
         scopeResolver.resolveForWrite(user, team.getInstitution().getId());
         ensureTeamManager(user, team);
+        invitationRepository.findByTeam_IdAndDeletedFalse(teamId).forEach(invitation -> {
+            invitation.setDeleted(true);
+            invitation.setStatus(RecordStatus.INACTIVE);
+            invitationRepository.save(invitation);
+        });
         team.setDeleted(true);
         team.setStatus(RecordStatus.INACTIVE);
         teamRepository.save(team);
@@ -377,6 +528,28 @@ public class RegistrationManagementService {
         return new RegistrationDashboardResponse(source.size(), approved, pending, rejected, waitlisted, cancelled, recent, upcoming, pendingApprovals);
     }
 
+    public List<RegistrationSummaryResponse> listWaitlist(String email, Long eventId) {
+        User user = requireCurrentUser(email);
+        Institution scope = scopeResolver.resolveForRead(user, null);
+        return registrationRepository.findAll().stream()
+                .filter(registration -> !registration.isDeleted())
+                .filter(registration -> registration.getRegistrationStatus() == RegistrationStatus.WAITLISTED)
+                .filter(registration -> eventId == null || Objects.equals(registration.getEvent().getId(), eventId))
+                .filter(registration -> scope == null || Objects.equals(registration.getInstitution().getId(), scope.getId()))
+                .sorted(Comparator.comparing(EventRegistration::getWaitlistPosition, Comparator.nullsLast(Integer::compareTo))
+                        .thenComparing(EventRegistration::getRegistrationDate, Comparator.reverseOrder()))
+                .map(this::toRegistrationSummary)
+                .toList();
+    }
+
+    public List<RegistrationSummaryResponse> listMyWaitlist(String email) {
+        User user = requireCurrentUser(email);
+        return registrationRepository.findByParticipant_IdAndDeletedFalseOrderByRegistrationDateDesc(user.getId()).stream()
+                .filter(registration -> registration.getRegistrationStatus() == RegistrationStatus.WAITLISTED)
+                .map(this::toRegistrationSummary)
+                .toList();
+    }
+
     public List<TeamResponse> listTeams(String email, Long eventId) {
         User user = requireCurrentUser(email);
         Event event = requireEvent(eventId);
@@ -401,6 +574,21 @@ public class RegistrationManagementService {
     public List<NotificationResponse> listNotifications(String email) {
         User user = requireCurrentUser(email);
         return notificationRepository.findByRecipient_IdAndDeletedFalseOrderByCreatedAtDesc(user.getId()).stream().map(this::toNotificationResponse).toList();
+    }
+
+    public long getUnreadNotificationCount(String email) {
+        User user = requireCurrentUser(email);
+        return notificationRepository.countByRecipient_IdAndReadAtIsNullAndDeletedFalse(user.getId());
+    }
+
+    public void markAllNotificationsRead(String email) {
+        User user = requireCurrentUser(email);
+        notificationRepository.findByRecipient_IdAndDeletedFalseOrderByCreatedAtDesc(user.getId()).forEach(notification -> {
+            if (notification.getReadAt() == null) {
+                notification.setReadAt(LocalDateTime.now());
+                notificationRepository.save(notification);
+            }
+        });
     }
 
     public NotificationResponse markNotificationRead(String email, Long id) {
@@ -471,6 +659,14 @@ public class RegistrationManagementService {
         return registration;
     }
 
+    private void saveRegistration(EventRegistration registration) {
+        try {
+            registrationRepository.saveAndFlush(registration);
+        } catch (DataIntegrityViolationException ex) {
+            throw new DuplicateResourceException("You are already registered for this event.");
+        }
+    }
+
     private void ensureRegistrationOpen(Event event, EventRegistrationConfig config) {
         if (event.getEventStatus() != EventStatus.REGISTRATION_OPEN) {
             throw new BusinessRuleViolationException("Registration is open only when the event status is Registration Open.");
@@ -494,13 +690,14 @@ public class RegistrationManagementService {
             return;
         }
         registrationRepository.findByParticipant_IdAndDeletedFalseOrderByRegistrationDateDesc(user.getId()).stream()
+                .filter(existing -> !Objects.equals(existing.getEvent().getId(), event.getId()))
                 .filter(existing -> existing.getRegistrationStatus() != RegistrationStatus.CANCELLED && existing.getRegistrationStatus() != RegistrationStatus.REJECTED)
                 .forEach(existing -> {
                     Event other = existing.getEvent();
                     if (other.getStartDateTime() != null && other.getEndDateTime() != null) {
                         boolean overlaps = event.getStartDateTime().isBefore(other.getEndDateTime()) && event.getEndDateTime().isAfter(other.getStartDateTime());
                         if (overlaps) {
-                            throw new BusinessRuleViolationException("You are already registered for another event occurring during this time.");
+                            throw new BusinessRuleViolationException("You are already registered for another event during this time: " + other.getTitle() + " on " + other.getStartDateTime().toLocalDate() + ".");
                         }
                     }
                 });
@@ -566,19 +763,41 @@ public class RegistrationManagementService {
         if (getConfig(event) == null || !getConfig(event).isWaitlistEnabled()) {
             return;
         }
-        registrationRepository.findByEvent_IdAndRegistrationStatusAndDeletedFalseOrderByWaitlistPositionAsc(event.getId(), RegistrationStatus.WAITLISTED).stream()
+        boolean promotedAny = false;
+        while (!isAtCapacity(event, null)) {
+            EventRegistration next = registrationRepository.findByEvent_IdAndRegistrationStatusAndDeletedFalseOrderByWaitlistPositionAsc(event.getId(), RegistrationStatus.WAITLISTED).stream()
+                    .filter(registration -> registration.getWaitlistPosition() != null)
+                    .sorted(Comparator.comparingInt(EventRegistration::getWaitlistPosition))
+                    .findFirst()
+                    .orElse(null);
+            if (next == null) {
+                break;
+            }
+            next.setRegistrationStatus(RegistrationStatus.APPROVED);
+            next.setWaitlistPosition(null);
+            next.setApprovedAt(LocalDateTime.now());
+            registrationRepository.saveAndFlush(next);
+            notify(next.getParticipant(), NotificationType.WAITLIST_PROMOTED, "Waitlist promotion", "A seat opened up for " + event.getTitle() + ".", "EventRegistration", next.getId());
+            promotedAny = true;
+        }
+        if (promotedAny) {
+            resequenceWaitlist(event);
+        }
+    }
+
+    private void resequenceWaitlist(Event event) {
+        List<EventRegistration> queue = registrationRepository.findByEvent_IdAndRegistrationStatusAndDeletedFalseOrderByWaitlistPositionAsc(event.getId(), RegistrationStatus.WAITLISTED).stream()
                 .filter(registration -> registration.getWaitlistPosition() != null)
                 .sorted(Comparator.comparingInt(EventRegistration::getWaitlistPosition))
-                .findFirst()
-                .ifPresent(registration -> {
-                    if (!isAtCapacity(event, registration.getId())) {
-                        registration.setRegistrationStatus(RegistrationStatus.APPROVED);
-                        registration.setWaitlistPosition(null);
-                        registration.setApprovedAt(LocalDateTime.now());
-                        registrationRepository.save(registration);
-                        notify(registration.getParticipant(), NotificationType.WAITLIST_PROMOTED, "Waitlist promotion", "A seat opened up for " + event.getTitle() + ".", "EventRegistration", registration.getId());
-                    }
-                });
+                .toList();
+        int position = 1;
+        for (EventRegistration registration : queue) {
+            if (!Objects.equals(registration.getWaitlistPosition(), position)) {
+                registration.setWaitlistPosition(position);
+                registrationRepository.save(registration);
+            }
+            position++;
+        }
     }
 
     private boolean isAtCapacity(Event event, Long ignoreRegistrationId) {
@@ -649,6 +868,51 @@ public class RegistrationManagementService {
         if (!Objects.equals(team.getLeader().getId(), currentUser.getId()) && !currentUserContext.isAdministrator(currentUser) && !currentUserContext.isFaculty(currentUser)) {
             throw new BusinessRuleViolationException("You are not allowed to manage this team.");
         }
+    }
+
+    private boolean ensureManagerSilently(User currentUser, Team team) {
+        return Objects.equals(team.getLeader().getId(), currentUser.getId())
+                || currentUserContext.isAdministrator(currentUser)
+                || currentUserContext.isFaculty(currentUser);
+    }
+
+    private boolean isRegistrationOpen(Event event, EventRegistrationConfig config) {
+        return event.getEventStatus() == EventStatus.REGISTRATION_OPEN
+                && (event.getRegistrationEndDateTime() == null || !event.getRegistrationEndDateTime().isBefore(LocalDateTime.now()))
+                && event.getEventStatus() != EventStatus.CANCELLED
+                && event.getEventStatus() != EventStatus.ARCHIVED;
+    }
+
+    private List<RegistrationConflictResponse> findConflicts(User user, Event event) {
+        if (event.getStartDateTime() == null || event.getEndDateTime() == null) {
+            return List.of();
+        }
+        return registrationRepository.findByParticipant_IdAndDeletedFalseOrderByRegistrationDateDesc(user.getId()).stream()
+                .filter(existing -> !Objects.equals(existing.getEvent().getId(), event.getId()))
+                .filter(existing -> existing.getRegistrationStatus() != RegistrationStatus.CANCELLED && existing.getRegistrationStatus() != RegistrationStatus.REJECTED)
+                .map(existing -> toConflictResponse(existing, event))
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    private RegistrationConflictResponse toConflictResponse(EventRegistration existing, Event requestedEvent) {
+        Event other = existing.getEvent();
+        if (other.getStartDateTime() == null || other.getEndDateTime() == null || requestedEvent.getStartDateTime() == null || requestedEvent.getEndDateTime() == null) {
+            return null;
+        }
+        boolean overlaps = requestedEvent.getStartDateTime().isBefore(other.getEndDateTime())
+                && requestedEvent.getEndDateTime().isAfter(other.getStartDateTime());
+        if (!overlaps) {
+            return null;
+        }
+        return new RegistrationConflictResponse(
+                other.getId(),
+                other.getTitle(),
+                other.getStartDateTime(),
+                other.getEndDateTime(),
+                existing.getParticipant().getFirstName() + " " + existing.getParticipant().getLastName(),
+                "This registration overlaps with another active registration."
+        );
     }
 
     private Event requireEvent(Long id) {
@@ -815,10 +1079,31 @@ public class RegistrationManagementService {
                 notification.getMessage(),
                 notification.getRelatedEntityType(),
                 notification.getRelatedEntityId(),
+                notificationTargetRoute(notification),
+                notificationSeverity(notification.getNotificationType()),
                 notification.getReadAt(),
                 notification.getCreatedAt(),
                 notification.getUpdatedAt()
         );
+    }
+
+    private String notificationTargetRoute(InAppNotification notification) {
+        if ("TeamInvitation".equalsIgnoreCase(notification.getRelatedEntityType())) {
+            return "/dashboard/notifications";
+        }
+        if ("EventRegistration".equalsIgnoreCase(notification.getRelatedEntityType())) {
+            return "/dashboard/registrations";
+        }
+        return "/dashboard/notifications";
+    }
+
+    private String notificationSeverity(NotificationType type) {
+        return switch (type) {
+            case REGISTRATION_REJECTED, REGISTRATION_CANCELLED, INVITATION_REJECTED, INVITATION_CANCELLED -> "warning";
+            case REGISTRATION_APPROVED, WAITLIST_PROMOTED, INVITATION_ACCEPTED -> "success";
+            case WAITLISTED, INVITATION_RECEIVED -> "info";
+            default -> "neutral";
+        };
     }
 
     private RegistrationSummaryResponse toRegistrationSummary(EventRegistration registration) {

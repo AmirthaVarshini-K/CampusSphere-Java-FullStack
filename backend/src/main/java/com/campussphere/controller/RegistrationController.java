@@ -8,6 +8,7 @@ import com.campussphere.dto.registration.RegistrationDtos.RegistrationContextRes
 import com.campussphere.dto.registration.RegistrationDtos.RegistrationDashboardResponse;
 import com.campussphere.dto.registration.RegistrationDtos.RegistrationDecisionRequest;
 import com.campussphere.dto.registration.RegistrationDtos.RegistrationRequest;
+import com.campussphere.dto.registration.RegistrationDtos.RegistrationPreviewResponse;
 import com.campussphere.dto.registration.RegistrationDtos.RegistrationSummaryResponse;
 import com.campussphere.dto.registration.RegistrationDtos.TeamInvitationRequest;
 import com.campussphere.dto.registration.RegistrationDtos.TeamInvitationResponse;
@@ -70,6 +71,18 @@ public class RegistrationController {
         return ApiResponseFactory.success("Your registrations were retrieved successfully.", service.listMyRegistrations(currentUserEmail(), search, status, page, size));
     }
 
+    @GetMapping("/registrations/waitlist")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR','FACULTY_COORDINATOR')")
+    public ApiResponse<List<RegistrationSummaryResponse>> listWaitlist(@RequestParam(required = false) Long eventId) {
+        return ApiResponseFactory.success("Waitlisted registrations retrieved successfully.", service.listWaitlist(currentUserEmail(), eventId));
+    }
+
+    @GetMapping("/registrations/me/waitlist")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<List<RegistrationSummaryResponse>> listMyWaitlist() {
+        return ApiResponseFactory.success("Your waitlisted registrations were retrieved successfully.", service.listMyWaitlist(currentUserEmail()));
+    }
+
     @GetMapping("/events/{eventId}/registration-context")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<RegistrationContextResponse> getRegistrationContext(@PathVariable Long eventId) {
@@ -80,6 +93,12 @@ public class RegistrationController {
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<EventRegistrationFormResponse> getRegistrationForm(@PathVariable Long eventId) {
         return ApiResponseFactory.success("Registration form retrieved successfully.", service.getEventRegistrationForm(currentUserEmail(), eventId));
+    }
+
+    @PostMapping("/events/{eventId}/registration-preview")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<RegistrationPreviewResponse> previewRegistration(@PathVariable Long eventId, @Valid @RequestBody RegistrationRequest request) {
+        return ApiResponseFactory.success("Registration preview retrieved successfully.", service.previewRegistration(currentUserEmail(), eventId, request));
     }
 
     @PostMapping("/events/{eventId}/register")
@@ -94,10 +113,28 @@ public class RegistrationController {
         return ApiResponseFactory.success("Team created successfully.", service.createTeam(currentUserEmail(), eventId, request));
     }
 
+    @GetMapping("/teams/me")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<List<TeamResponse>> listMyTeams() {
+        return ApiResponseFactory.success("Your teams were retrieved successfully.", service.listMyTeams(currentUserEmail()));
+    }
+
+    @GetMapping("/team-invitations/me")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<List<TeamInvitationResponse>> listMyTeamInvitations() {
+        return ApiResponseFactory.success("Your team invitations were retrieved successfully.", service.listMyInvitations(currentUserEmail()));
+    }
+
     @GetMapping("/events/{eventId}/teams")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<List<TeamResponse>> listTeams(@PathVariable Long eventId) {
         return ApiResponseFactory.success("Teams retrieved successfully.", service.listTeams(currentUserEmail(), eventId));
+    }
+
+    @GetMapping("/teams/{teamId}/invitations")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<List<TeamInvitationResponse>> listTeamInvitations(@PathVariable Long teamId) {
+        return ApiResponseFactory.success("Team invitations retrieved successfully.", service.listInvitations(currentUserEmail(), teamId));
     }
 
     @GetMapping("/teams/{teamId}/members")
@@ -124,6 +161,24 @@ public class RegistrationController {
         return ApiResponseFactory.success("Invitation rejected successfully.", service.rejectInvitation(currentUserEmail(), invitationId));
     }
 
+    @PostMapping("/team-invitations/{invitationId}/cancel")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<?> cancelInvitation(@PathVariable Long invitationId) {
+        return ApiResponseFactory.success("Invitation cancelled successfully.", service.cancelInvitation(currentUserEmail(), invitationId));
+    }
+
+    @PutMapping("/teams/{teamId}")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<?> updateTeam(@PathVariable Long teamId, @Valid @RequestBody TeamRequest request) {
+        return ApiResponseFactory.success("Team updated successfully.", service.updateTeam(currentUserEmail(), teamId, request));
+    }
+
+    @PostMapping("/teams/{teamId}/members/{memberId}/remove")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<?> removeTeamMember(@PathVariable Long teamId, @PathVariable Long memberId) {
+        return ApiResponseFactory.success("Team member removed successfully.", service.removeTeamMember(currentUserEmail(), teamId, memberId));
+    }
+
     @PutMapping("/teams/{teamId}/transfer")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<?> transferOwnership(@PathVariable Long teamId, @Valid @RequestBody TeamTransferRequest request) {
@@ -136,10 +191,23 @@ public class RegistrationController {
         return ApiResponseFactory.success("You left the team successfully.", service.leaveTeam(currentUserEmail(), teamId));
     }
 
+    @PostMapping("/teams/{teamId}/delete")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Void> deleteTeam(@PathVariable Long teamId) {
+        service.deleteTeam(currentUserEmail(), teamId);
+        return ApiResponseFactory.success("Team deleted successfully.", null);
+    }
+
     @PostMapping("/registrations/{registrationId}/decision")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','FACULTY_COORDINATOR')")
     public ApiResponse<?> decideRegistration(@PathVariable Long registrationId, @Valid @RequestBody RegistrationDecisionRequest request) {
         return ApiResponseFactory.success("Registration updated successfully.", service.approveRegistration(currentUserEmail(), registrationId, request));
+    }
+
+    @PostMapping("/registrations/{registrationId}/promote")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR','FACULTY_COORDINATOR')")
+    public ApiResponse<?> promoteWaitlistEntry(@PathVariable Long registrationId) {
+        return ApiResponseFactory.success("Waitlist entry promoted successfully.", service.promoteWaitlistEntry(currentUserEmail(), registrationId));
     }
 
     @PostMapping("/registrations/{registrationId}/cancel")
@@ -152,6 +220,19 @@ public class RegistrationController {
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<List<NotificationResponse>> listNotifications() {
         return ApiResponseFactory.success("Notifications retrieved successfully.", service.listNotifications(currentUserEmail()));
+    }
+
+    @GetMapping("/notifications/unread-count")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Long> unreadNotificationCount() {
+        return ApiResponseFactory.success("Unread notification count retrieved successfully.", service.getUnreadNotificationCount(currentUserEmail()));
+    }
+
+    @PostMapping("/notifications/mark-all-read")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Void> markAllNotificationsRead() {
+        service.markAllNotificationsRead(currentUserEmail());
+        return ApiResponseFactory.success("All notifications marked as read.", null);
     }
 
     @PatchMapping("/notifications/{id}/read")

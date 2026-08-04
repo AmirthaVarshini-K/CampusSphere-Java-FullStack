@@ -17,7 +17,7 @@ import { getApiErrorMessage } from '../utils/apiErrors';
 const summaryCards = [
   { label: 'Session status', value: 'Protected', tone: 'success', detail: 'JWT-backed access is active for this workspace.' },
   { label: 'Role routing', value: 'Ready', tone: 'neutral', detail: 'The shell is prepared for admin, faculty, organiser, and student views.' },
-  { label: 'Backend state', value: 'API-first', tone: 'neutral', detail: 'Data panels fall back to honest empty states when the server is offline.' }
+  { label: 'Backend state', value: 'API-first', tone: 'neutral', detail: 'Panels fall back to honest empty states when the server is offline.' }
 ];
 
 const activityNotes = [
@@ -70,9 +70,9 @@ export default function DashboardShellPage() {
   const isPrivileged = ['SUPER_ADMIN', 'INSTITUTION_ADMIN', 'ADMINISTRATOR', 'ORGANISER', 'FACULTY_COORDINATOR'].includes(roleCode);
 
   return (
-    <div className="dashboard-page">
-      <section className="dashboard-page__hero">
-        <div>
+    <div className="dashboard-page dashboard-shell-page">
+      <section className="dashboard-page__hero dashboard-shell-page__hero">
+        <div className="dashboard-shell-page__hero-copy">
           <Badge tone="neutral">Dashboard</Badge>
           <h1>{roleLabel} workspace</h1>
           <p>{getRoleDescription(roleCode)}. This shell stays honest about the backend state while still feeling like a real product.</p>
@@ -88,7 +88,7 @@ export default function DashboardShellPage() {
 
       {errorMessage && <ErrorState title="Backend unavailable" description={errorMessage} onRetry={() => window.location.reload()} />}
 
-      <div className="dashboard-page__grid">
+      <div className="dashboard-page__grid dashboard-shell-page__grid">
         <Card elevated className="dashboard-page__profile">
           <div className="dashboard-page__section-header">
             <div>
@@ -144,7 +144,7 @@ export default function DashboardShellPage() {
         </div>
       </div>
 
-      <div className="card-grid card-grid--two">
+      <div className="card-grid card-grid--two dashboard-shell-page__content-grid">
         <Card elevated className="section-panel">
           <div className="section-panel__title">
             <strong>Upcoming events</strong>
@@ -163,8 +163,8 @@ export default function DashboardShellPage() {
           </div>
           <div className="dashboard-page__quick-actions">
             {activityNotes.map(note => (
-              <div key={note} className="workflow-step">
-                <span className="workflow-step__index">•</span>
+              <div key={note} className="workflow-step dashboard-shell-page__activity">
+                <span className="workflow-step__index">*</span>
                 <div className="workflow-step__copy">
                   <strong>{note}</strong>
                   <span>Shown until live backend events are available.</span>
@@ -175,7 +175,7 @@ export default function DashboardShellPage() {
         </Card>
       </div>
 
-      <div className="card-grid card-grid--two">
+      <div className="card-grid card-grid--two dashboard-shell-page__content-grid">
         <Card className="section-panel">
           <div className="section-panel__title">
             <strong>Quick actions</strong>

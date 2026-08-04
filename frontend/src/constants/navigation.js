@@ -8,11 +8,12 @@ export const PUBLIC_NAV_ITEMS = [
 ];
 
 export const DASHBOARD_NAV_ITEMS = [
-  { label: 'Overview', path: APP_ROUTES.dashboard },
-  { label: 'Profile', path: `${APP_ROUTES.dashboard}/profile` },
-  { label: 'Security', path: `${APP_ROUTES.dashboard}/security` },
-  { label: 'Activity', path: `${APP_ROUTES.dashboard}/activity` },
-  { label: 'Institution Setup', path: `${APP_ROUTES.dashboard}/institution-setup` },
-  { label: 'Events', path: `${APP_ROUTES.dashboard}/events` },
-  { label: 'Registrations', path: APP_ROUTES.registrations }
+  { label: 'Overview', path: APP_ROUTES.dashboard, group: 'Workspace' },
+  { label: 'Profile', path: `${APP_ROUTES.dashboard}/profile`, group: 'Workspace' },
+  { label: 'Security', path: `${APP_ROUTES.dashboard}/security`, group: 'Workspace' },
+  { label: 'Activity', path: `${APP_ROUTES.dashboard}/activity`, group: 'Workspace' },
+  { label: 'Institution Setup', path: `${APP_ROUTES.dashboard}/institution-setup`, group: 'Operations' },
+  { label: 'Events', path: `${APP_ROUTES.dashboard}/events`, group: 'Operations' },
+  { label: 'Registrations', path: APP_ROUTES.registrations, group: 'Operations' },
+  { label: 'Notifications', path: `${APP_ROUTES.dashboard}/notifications`, group: 'Support' }
 ];

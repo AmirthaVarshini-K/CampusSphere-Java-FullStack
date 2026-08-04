@@ -9,6 +9,7 @@ import FormSection from '../components/FormSection';
 import Input from '../components/Input';
 import LoadingButton from '../components/LoadingButton';
 import LoadingSkeleton from '../components/LoadingSkeleton';
+import Dialog from '../components/Dialog';
 import Modal from '../components/Modal';
 import Pagination from '../components/Pagination';
 import SearchBar from '../components/SearchBar';
@@ -26,6 +27,7 @@ import useToastQueue from '../hooks/useToastQueue';
 import { extractValidationMessages, getApiErrorMessage, isNetworkError } from '../utils/apiErrors';
 import { buildDisplayName, getPrimaryRole } from '../utils/auth';
 import { classNames } from '../utils/classNames';
+import ConflictPanel from '../components/registrations/ConflictPanel';
 
 const WORKSPACE_TABS = [
   { key: 'overview', label: 'Overview' },
@@ -138,6 +140,30 @@ function StatusBadge({ status }) {
   return <Badge tone={toneForStatus(status)}>{friendlyStatus(status)}</Badge>;
 }
 
+function RowActionMenu({ label = 'Actions', items = [] }) {
+  return (
+    <details className="workspace-menu">
+      <summary className="workspace-menu__summary">{label}</summary>
+      <div className="workspace-menu__panel" role="menu">
+        {items.filter(item => !item.hidden).map(item => (
+          <button
+            key={item.label}
+            type="button"
+            className={classNames('workspace-menu__item', item.tone && `workspace-menu__item--${item.tone}`)}
+            disabled={item.disabled}
+            onClick={event => {
+              event.currentTarget.closest('details')?.removeAttribute('open');
+              item.onClick?.();
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+    </details>
+  );
+}
+
 function buildValidationMap(messages = []) {
   return messages.reduce((acc, message) => {
     acc.general.push(message);
@@ -179,6 +205,22 @@ export default function RegistrationManagementPage() {
   const [teams, setTeams] = useState([]);
   const [teamsLoading, setTeamsLoading] = useState(true);
   const [teamsError, setTeamsError] = useState('');
+  const [myTeams, setMyTeams] = useState([]);
+  const [myTeamsLoading, setMyTeamsLoading] = useState(true);
+  const [myTeamsError, setMyTeamsError] = useState('');
+  const [myTeamInvitations, setMyTeamInvitations] = useState([]);
+  const [myTeamInvitationsLoading, setMyTeamInvitationsLoading] = useState(true);
+  const [myTeamInvitationsError, setMyTeamInvitationsError] = useState('');
+  const [selectedTeamId, setSelectedTeamId] = useState(null);
+  const [selectedTeamMembers, setSelectedTeamMembers] = useState([]);
+  const [selectedTeamMembersLoading, setSelectedTeamMembersLoading] = useState(false);
+  const [selectedTeamMembersError, setSelectedTeamMembersError] = useState('');
+  const [selectedTeamInvitations, setSelectedTeamInvitations] = useState([]);
+  const [selectedTeamInvitationsLoading, setSelectedTeamInvitationsLoading] = useState(false);
+  const [selectedTeamInvitationsError, setSelectedTeamInvitationsError] = useState('');
+  const [selectedTeamContext, setSelectedTeamContext] = useState(null);
+  const [selectedTeamContextLoading, setSelectedTeamContextLoading] = useState(false);
+  const [selectedTeamContextError, setSelectedTeamContextError] = useState('');
 
   const [formPayload, setFormPayload] = useState({
     registrationType: 'INDIVIDUAL',
@@ -193,18 +235,27 @@ export default function RegistrationManagementPage() {
   const [registrationSubmitting, setRegistrationSubmitting] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState('');
   const [registrationErrors, setRegistrationErrors] = useState([]);
+  const [registrationPreview, setRegistrationPreview] = useState(null);
+  const [registrationPreviewLoading, setRegistrationPreviewLoading] = useState(false);
+  const [registrationPreviewError, setRegistrationPreviewError] = useState('');
 
   const [createTeamOpen, setCreateTeamOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [teamActionLoading, setTeamActionLoading] = useState(false);
   const [teamForm, setTeamForm] = useState({ teamName: '', teamCode: '' });
   const [inviteForm, setInviteForm] = useState({ invitedUserId: '', message: '' });
+  const [editingTeamId, setEditingTeamId] = useState(null);
   const [activeTeamId, setActiveTeamId] = useState(null);
   const [teamFormErrors, setTeamFormErrors] = useState([]);
   const [inviteErrors, setInviteErrors] = useState([]);
+  const [teamTransferOpen, setTeamTransferOpen] = useState(false);
+  const [teamTransferForm, setTeamTransferForm] = useState({ teamId: null, newLeaderUserId: '' });
+  const [teamTransferErrors, setTeamTransferErrors] = useState([]);
+  const [teamConfirm, setTeamConfirm] = useState(null);
+  const [teamConfirmLoading, setTeamConfirmLoading] = useState(false);
 
   const isAdmin = ['SUPER_ADMIN', 'INSTITUTION_ADMIN', 'ADMINISTRATOR', 'FACULTY_COORDINATOR', 'ORGANISER'].includes(roleCode);
-  const workspaceHasBackend = Boolean(dashboard || registrationList.content.length || myRegistrations.content.length || notifications.length || teams.length);
+  const workspaceHasBackend = Boolean(dashboard || registrationList.content.length || myRegistrations.content.length || notifications.length || teams.length || myTeams.length || myTeamInvitations.length);
 
   const pageTitle = useMemo(() => {
     if (route.view === 'event-register' && eventForm?.context?.eventTitle) {
@@ -360,6 +411,154 @@ export default function RegistrationManagementPage() {
   useEffect(() => {
     let active = true;
 
+    async function loadMyTeams() {
+      if (route.view !== 'workspace') {
+        return;
+      }
+      setMyTeamsLoading(true);
+      setMyTeamsError('');
+      try {
+        const response = await registrationApi.listMyTeams();
+        if (!active) {
+          return;
+        }
+        const data = unwrap(response) ?? [];
+        setMyTeams(data);
+        setSelectedTeamId(current => current ?? data[0]?.id ?? null);
+      } catch (error) {
+        if (!active) {
+          return;
+        }
+        setMyTeamsError(getApiErrorMessage(error, 'Unable to load your teams.'));
+      } finally {
+        if (active) {
+          setMyTeamsLoading(false);
+        }
+      }
+    }
+
+    loadMyTeams();
+    return () => {
+      active = false;
+    };
+  }, [route.view]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadMyTeamInvitations() {
+      if (route.view !== 'workspace') {
+        return;
+      }
+      setMyTeamInvitationsLoading(true);
+      setMyTeamInvitationsError('');
+      try {
+        const response = await registrationApi.listMyTeamInvitations();
+        if (!active) {
+          return;
+        }
+        setMyTeamInvitations(unwrap(response) ?? []);
+      } catch (error) {
+        if (!active) {
+          return;
+        }
+        setMyTeamInvitationsError(getApiErrorMessage(error, 'Unable to load your team invitations.'));
+      } finally {
+        if (active) {
+          setMyTeamInvitationsLoading(false);
+        }
+      }
+    }
+
+    loadMyTeamInvitations();
+    return () => {
+      active = false;
+    };
+  }, [route.view]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadSelectedTeam() {
+      if (route.view !== 'workspace' || !selectedTeamId) {
+        setSelectedTeamMembers([]);
+        setSelectedTeamInvitations([]);
+        setSelectedTeamContext(null);
+        return;
+      }
+      setSelectedTeamMembersLoading(true);
+      setSelectedTeamInvitationsLoading(true);
+      setSelectedTeamMembersError('');
+      setSelectedTeamInvitationsError('');
+      try {
+        const [membersResponse, invitationsResponse] = await Promise.all([
+          registrationApi.listTeamMembers(selectedTeamId),
+          registrationApi.listTeamInvitations(selectedTeamId)
+        ]);
+        if (!active) {
+          return;
+        }
+        setSelectedTeamMembers(unwrap(membersResponse) ?? []);
+        setSelectedTeamInvitations(unwrap(invitationsResponse) ?? []);
+      } catch (error) {
+        if (!active) {
+          return;
+        }
+        const message = getApiErrorMessage(error, 'Unable to load the selected team.');
+        setSelectedTeamMembersError(message);
+        setSelectedTeamInvitationsError(message);
+      } finally {
+        if (active) {
+          setSelectedTeamMembersLoading(false);
+          setSelectedTeamInvitationsLoading(false);
+        }
+      }
+    }
+
+    loadSelectedTeam();
+    return () => {
+      active = false;
+    };
+  }, [route.view, selectedTeamId]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadSelectedTeamContext() {
+      const currentTeam = myTeams.find(team => team.id === selectedTeamId) ?? null;
+      if (route.view !== 'workspace' || !currentTeam?.eventId) {
+        setSelectedTeamContext(null);
+        return;
+      }
+      setSelectedTeamContextLoading(true);
+      setSelectedTeamContextError('');
+      try {
+        const response = await registrationApi.getEventRegistrationContext(currentTeam.eventId);
+        if (!active) {
+          return;
+        }
+        setSelectedTeamContext(unwrap(response));
+      } catch (error) {
+        if (!active) {
+          return;
+        }
+        setSelectedTeamContextError(getApiErrorMessage(error, 'Unable to load the team context.'));
+      } finally {
+        if (active) {
+          setSelectedTeamContextLoading(false);
+        }
+      }
+    }
+
+    loadSelectedTeamContext();
+    return () => {
+      active = false;
+    };
+  }, [route.view, selectedTeamId, myTeams]);
+
+  useEffect(() => {
+    let active = true;
+
     async function loadEventForm() {
       if (route.view !== 'event-register' || !eventId) {
         setEventFormLoading(false);
@@ -394,6 +593,61 @@ export default function RegistrationManagementPage() {
     };
   }, [eventId, route.view]);
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadRegistrationPreview() {
+      if (route.view !== 'event-register' || !eventId || !eventForm) {
+        setRegistrationPreview(null);
+        setRegistrationPreviewError('');
+        setRegistrationPreviewLoading(false);
+        return;
+      }
+
+      setRegistrationPreviewLoading(true);
+      setRegistrationPreviewError('');
+      try {
+        const response = await registrationApi.previewRegistration(eventId, {
+          registrationType: formPayload.registrationType,
+          teamName: formPayload.registrationType === 'TEAM' ? formPayload.teamName : null,
+          teamCode: formPayload.registrationType === 'TEAM' ? formPayload.teamCode : null,
+          remarks: formPayload.remarks || null
+        });
+        if (!active) {
+          return;
+        }
+        setRegistrationPreview(unwrap(response));
+      } catch (error) {
+        if (!active) {
+          return;
+        }
+        setRegistrationPreview(null);
+        setRegistrationPreviewError(getApiErrorMessage(error, 'Unable to preview the registration right now.'));
+      } finally {
+        if (active) {
+          setRegistrationPreviewLoading(false);
+        }
+      }
+    }
+
+    const timer = window.setTimeout(() => {
+      loadRegistrationPreview();
+    }, 250);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [
+    eventForm,
+    eventId,
+    formPayload.registrationType,
+    formPayload.teamCode,
+    formPayload.teamName,
+    formPayload.remarks,
+    route.view
+  ]);
+
   async function refreshTeams() {
     if (!eventId) {
       return;
@@ -416,6 +670,39 @@ export default function RegistrationManagementPage() {
     setMySearch('');
     setMyStatus('');
     setMyPage(1);
+  }
+
+  async function refreshEventForm() {
+    if (!eventId) {
+      return;
+    }
+    const response = await registrationApi.getEventRegistrationForm(eventId);
+    const data = unwrap(response);
+    setEventForm(data);
+    setFormContext(data?.context ?? null);
+    setTeams(data?.teams ?? []);
+  }
+
+  async function refreshRegistrationPreview() {
+    if (!eventId || !eventForm) {
+      return;
+    }
+    setRegistrationPreviewLoading(true);
+    setRegistrationPreviewError('');
+    try {
+      const response = await registrationApi.previewRegistration(eventId, {
+        registrationType: formPayload.registrationType,
+        teamName: formPayload.registrationType === 'TEAM' ? formPayload.teamName : null,
+        teamCode: formPayload.registrationType === 'TEAM' ? formPayload.teamCode : null,
+        remarks: formPayload.remarks || null
+      });
+      setRegistrationPreview(unwrap(response));
+    } catch (error) {
+      setRegistrationPreview(null);
+      setRegistrationPreviewError(getApiErrorMessage(error, 'Unable to preview the registration right now.'));
+    } finally {
+      setRegistrationPreviewLoading(false);
+    }
   }
 
   async function submitEventRegistration(event) {
@@ -453,14 +740,21 @@ export default function RegistrationManagementPage() {
     setTeamActionLoading(true);
     setTeamFormErrors([]);
     try {
-      await registrationApi.createTeam(eventId, teamForm);
-      pushToast('Team created successfully.');
+      if (editingTeamId) {
+        await registrationApi.updateTeam(editingTeamId, teamForm);
+        pushToast('Team updated successfully.');
+      } else {
+        await registrationApi.createTeam(eventId, teamForm);
+        pushToast('Team created successfully.');
+      }
       setCreateTeamOpen(false);
       setTeamForm({ teamName: '', teamCode: '' });
+      setEditingTeamId(null);
       await refreshTeams();
+      await refreshEventForm();
     } catch (error) {
       const messages = extractValidationMessages(error);
-      setTeamFormErrors(messages.length ? messages : [getApiErrorMessage(error, 'Unable to create the team.')]);
+      setTeamFormErrors(messages.length ? messages : [getApiErrorMessage(error, editingTeamId ? 'Unable to update the team.' : 'Unable to create the team.')]);
     } finally {
       setTeamActionLoading(false);
     }
@@ -500,6 +794,17 @@ export default function RegistrationManagementPage() {
     }
   }
 
+  async function handleMarkAllRead() {
+    try {
+      await registrationApi.markAllNotificationsRead();
+      const response = await registrationApi.listNotifications();
+      setNotifications(unwrap(response) ?? []);
+      pushToast('All notifications marked as read.');
+    } catch (error) {
+      pushToast(getApiErrorMessage(error, 'Unable to update the notifications.'), 'error');
+    }
+  }
+
   async function handleCancelRegistration(id) {
     try {
       await registrationApi.cancelRegistration(id);
@@ -511,6 +816,8 @@ export default function RegistrationManagementPage() {
         size: 10
       });
       setMyRegistrations(unwrapPage(response));
+      await refreshMyTeams();
+      await refreshSelectedTeamDetails();
     } catch (error) {
       pushToast(getApiErrorMessage(error, 'Unable to cancel the registration.'), 'error');
     }
@@ -557,13 +864,22 @@ export default function RegistrationManagementPage() {
     try {
       await (accepted ? registrationApi.acceptInvitation(id) : registrationApi.rejectInvitation(id));
       pushToast(accepted ? 'Invitation accepted.' : 'Invitation rejected.');
-      const response = await registrationApi.getEventRegistrationForm(eventId);
-      const data = unwrap(response);
-      setEventForm(data);
-      setFormContext(data?.context ?? null);
-      setTeams(data?.teams ?? []);
+      await refreshEventForm();
+      await refreshMyTeams();
+      await refreshMyTeamInvitations();
     } catch (error) {
       pushToast(getApiErrorMessage(error, 'Unable to update the invitation.'), 'error');
+    }
+  }
+
+  async function handleCancelInvitation(id) {
+    try {
+      await registrationApi.cancelInvitation(id);
+      pushToast('Invitation cancelled.');
+      await refreshEventForm();
+      await refreshMyTeamInvitations();
+    } catch (error) {
+      pushToast(getApiErrorMessage(error, 'Unable to cancel the invitation.'), 'error');
     }
   }
 
@@ -577,13 +893,196 @@ export default function RegistrationManagementPage() {
     }
   }
 
+  function openTeamEditor(team) {
+    setEditingTeamId(team.id);
+    setTeamForm({ teamName: team.teamName ?? '', teamCode: team.teamCode ?? '' });
+    setCreateTeamOpen(true);
+  }
+
   async function handleLeaveTeam(teamId) {
     try {
       await registrationApi.leaveTeam(teamId);
       pushToast('You left the team.');
-      await refreshTeams();
+      await refreshMyTeams();
+      await refreshMyTeamInvitations();
     } catch (error) {
       pushToast(getApiErrorMessage(error, 'Unable to leave the team.'), 'error');
+    }
+  }
+
+  async function handleDeleteTeam(teamId) {
+    try {
+      await registrationApi.deleteTeam(teamId);
+      pushToast('Team deleted successfully.');
+      if (selectedTeamId === teamId) {
+        setSelectedTeamId(null);
+      }
+      await refreshMyTeams();
+      await refreshMyTeamInvitations();
+    } catch (error) {
+      pushToast(getApiErrorMessage(error, 'Unable to delete the team.'), 'error');
+    }
+  }
+
+  async function refreshMyTeams() {
+    if (route.view !== 'workspace') {
+      return;
+    }
+    try {
+      const response = await registrationApi.listMyTeams();
+      const data = unwrap(response) ?? [];
+      setMyTeams(data);
+      setSelectedTeamId(current => {
+        if (current && data.some(team => team.id === current)) {
+          return current;
+        }
+        return data[0]?.id ?? null;
+      });
+    } catch (error) {
+      pushToast(getApiErrorMessage(error, 'Unable to refresh your teams.'), 'error');
+    }
+  }
+
+  async function refreshMyTeamInvitations() {
+    if (route.view !== 'workspace') {
+      return;
+    }
+    try {
+      const response = await registrationApi.listMyTeamInvitations();
+      setMyTeamInvitations(unwrap(response) ?? []);
+    } catch (error) {
+      pushToast(getApiErrorMessage(error, 'Unable to refresh your invitations.'), 'error');
+    }
+  }
+
+  async function refreshSelectedTeamDetails(teamId = selectedTeamId) {
+    if (route.view !== 'workspace' || !teamId) {
+      setSelectedTeamMembers([]);
+      setSelectedTeamInvitations([]);
+      return;
+    }
+    setSelectedTeamMembersLoading(true);
+    setSelectedTeamInvitationsLoading(true);
+    setSelectedTeamMembersError('');
+    setSelectedTeamInvitationsError('');
+    try {
+      const [membersResponse, invitationsResponse] = await Promise.all([
+        registrationApi.listTeamMembers(teamId),
+        registrationApi.listTeamInvitations(teamId)
+      ]);
+      setSelectedTeamMembers(unwrap(membersResponse) ?? []);
+      setSelectedTeamInvitations(unwrap(invitationsResponse) ?? []);
+    } catch (error) {
+      const message = getApiErrorMessage(error, 'Unable to refresh team details.');
+      setSelectedTeamMembersError(message);
+      setSelectedTeamInvitationsError(message);
+    } finally {
+      setSelectedTeamMembersLoading(false);
+      setSelectedTeamInvitationsLoading(false);
+    }
+  }
+
+  function requestTeamDelete(team) {
+    setTeamConfirm({
+      type: 'delete',
+      teamId: team.id,
+      title: `Delete ${team.teamName}?`,
+      description: 'This will archive the team and remove its active roster from the workspace.',
+      confirmLabel: 'Delete team'
+    });
+  }
+
+  function requestTeamLeave(team) {
+    setTeamConfirm({
+      type: 'leave',
+      teamId: team.id,
+      title: `Leave ${team.teamName}?`,
+      description: 'If you are the leader, you must transfer ownership before leaving unless you are the only remaining member.',
+      confirmLabel: 'Leave team'
+    });
+  }
+
+  function requestTeamMemberRemoval(team, member) {
+    setTeamConfirm({
+      type: 'remove-member',
+      teamId: team.id,
+      memberId: member.id,
+      title: `Remove ${member.userName} from ${team.teamName}?`,
+      description: 'The member will lose access to the team and its registration flow.',
+      confirmLabel: 'Remove member'
+    });
+  }
+
+  function requestInvitationCancel(invitation) {
+    setTeamConfirm({
+      type: 'cancel-invitation',
+      invitationId: invitation.id,
+      title: `Cancel invitation for ${invitation.invitedUserName}?`,
+      description: 'The invited participant will no longer be able to accept this invitation.',
+      confirmLabel: 'Cancel invitation'
+    });
+  }
+
+  function openTeamTransfer(team) {
+    setTeamTransferErrors([]);
+    setTeamTransferForm({ teamId: team.id, newLeaderUserId: '' });
+    setTeamTransferOpen(true);
+  }
+
+  async function submitTeamTransfer(event) {
+    event.preventDefault();
+    setTeamActionLoading(true);
+    setTeamTransferErrors([]);
+    try {
+      await registrationApi.transferTeamOwnership(teamTransferForm.teamId, {
+        newLeaderUserId: Number(teamTransferForm.newLeaderUserId)
+      });
+      pushToast('Team ownership transferred successfully.');
+      setTeamTransferOpen(false);
+      await refreshMyTeams();
+      await refreshSelectedTeamDetails(teamTransferForm.teamId);
+    } catch (error) {
+      const messages = extractValidationMessages(error);
+      setTeamTransferErrors(messages.length ? messages : [getApiErrorMessage(error, 'Unable to transfer ownership.')]);
+    } finally {
+      setTeamActionLoading(false);
+    }
+  }
+
+  async function confirmTeamAction(event) {
+    event.preventDefault();
+    if (!teamConfirm) {
+      return;
+    }
+    setTeamConfirmLoading(true);
+    try {
+      switch (teamConfirm.type) {
+        case 'delete':
+          await handleDeleteTeam(teamConfirm.teamId);
+          break;
+        case 'leave':
+          await handleLeaveTeam(teamConfirm.teamId);
+          break;
+        case 'remove-member':
+          await registrationApi.removeTeamMember(teamConfirm.teamId, teamConfirm.memberId);
+          pushToast('Team member removed successfully.');
+          await refreshSelectedTeamDetails(teamConfirm.teamId);
+          await refreshMyTeams();
+          break;
+        case 'cancel-invitation':
+          await registrationApi.cancelInvitation(teamConfirm.invitationId);
+          pushToast('Invitation cancelled successfully.');
+          await refreshSelectedTeamDetails(selectedTeamId);
+          await refreshMyTeamInvitations();
+          break;
+        default:
+          break;
+      }
+      setTeamConfirm(null);
+    } catch (error) {
+      pushToast(getApiErrorMessage(error, 'Unable to complete the team action.'), 'error');
+    } finally {
+      setTeamConfirmLoading(false);
     }
   }
 
@@ -598,11 +1097,19 @@ export default function RegistrationManagementPage() {
   const canManageAll = isAdmin;
   const allRows = registrationList.content;
   const myRows = myRegistrations.content;
+  const selectedTeam = myTeams.find(team => team.id === selectedTeamId) ?? null;
+  const selectedTeamRegistrations = myRows.filter(row => row.teamId === selectedTeamId);
+  const selectedTeamRegistration = selectedTeamRegistrations.find(row => row.participantId === user?.id) ?? selectedTeamRegistrations[0] ?? null;
 
   const teamRows = teams.map(team => ({
     ...team,
     memberCount: team.memberCount ?? 0
   }));
+  const myTeamRows = myTeams.map(team => ({
+    ...team,
+    memberCount: team.memberCount ?? 0
+  }));
+  const unreadNotificationCount = notifications.filter(item => !item.readAt).length;
 
   function toggleSelected(id, checked) {
     setSelectedIds(current => checked ? [...new Set([...current, id])] : current.filter(item => item !== id));
@@ -704,6 +1211,9 @@ export default function RegistrationManagementPage() {
                 <ValidationMessages messages={registrationErrors} />
               </FormSection>
               <div className="workspace-actions">
+                <Button variant="secondary" size="sm" onClick={refreshRegistrationPreview} disabled={registrationPreviewLoading}>
+                  {registrationPreviewLoading ? 'Checking...' : 'Refresh preview'}
+                </Button>
                 <LoadingButton type="submit" loading={registrationSubmitting} disabled={!formContext?.canRegister}>
                   Submit registration
                 </LoadingButton>
@@ -727,6 +1237,8 @@ export default function RegistrationManagementPage() {
               <div className="workspace-summary__item"><span>Waitlist</span><strong>{formContext?.waitlistEnabled ? 'Enabled' : 'Disabled'}</strong></div>
               <div className="workspace-summary__item"><span>Type</span><strong>{friendlyStatus(formContext?.mode)}</strong></div>
             </div>
+            {registrationPreviewError ? <ErrorBanner message={registrationPreviewError} /> : null}
+            <ConflictPanel preview={registrationPreview} loading={registrationPreviewLoading} />
             <div className="workspace-footer">
               <span>Notes</span>
               <p>
@@ -744,7 +1256,7 @@ export default function RegistrationManagementPage() {
               <p>Manage team participation after the team registration request is created.</p>
             </div>
             <div className="workspace-actions">
-              <Button variant="secondary" onClick={() => setCreateTeamOpen(true)}>
+              <Button variant="secondary" onClick={() => { setEditingTeamId(null); setCreateTeamOpen(true); }}>
                 Create team
               </Button>
             </div>
@@ -765,6 +1277,9 @@ export default function RegistrationManagementPage() {
                       <Button variant="secondary" size="sm" onClick={() => { setActiveTeamId(row.id); setInviteOpen(true); }}>
                         Invite
                       </Button>
+                      <Button variant="secondary" size="sm" onClick={() => openTeamEditor(row)}>
+                        Edit
+                      </Button>
                       <Button variant="secondary" size="sm" onClick={() => handleLeaveTeam(row.id)}>
                         Leave
                       </Button>
@@ -780,8 +1295,46 @@ export default function RegistrationManagementPage() {
               title="No teams yet"
               description="Create a team first if this event uses team registrations."
               actionLabel="Create team"
-              onAction={() => setCreateTeamOpen(true)}
+              onAction={() => { setEditingTeamId(null); setCreateTeamOpen(true); }}
             />
+          )}
+        </Card>
+
+        <Card elevated className="workspace-table-card">
+          <div className="workspace-table-card__meta">
+            <div>
+              <h2>Pending invitations</h2>
+              <p>Track invitations for the current event and respond without leaving the workspace.</p>
+            </div>
+          </div>
+          {eventForm?.invitations?.length ? (
+            <Table
+              columns={[
+                { key: 'teamName', header: 'Team', render: row => row.teamName },
+                { key: 'status', header: 'Status', render: row => <StatusBadge status={row.status} /> },
+                { key: 'invitedAt', header: 'Invited', render: row => formatDateTime(row.invitedAt) },
+                {
+                  key: 'actions',
+                  header: 'Actions',
+                  render: row => (
+                    <div className="workspace-actions">
+                      <Button variant="secondary" size="sm" onClick={() => handleInvitationResponse(row.id, true)} disabled={row.status !== 'PENDING'}>
+                        Accept
+                      </Button>
+                      <Button variant="secondary" size="sm" onClick={() => handleInvitationResponse(row.id, false)} disabled={row.status !== 'PENDING'}>
+                        Reject
+                      </Button>
+                      <Button variant="secondary" size="sm" onClick={() => handleCancelInvitation(row.id)} disabled={row.status !== 'PENDING'}>
+                        Cancel
+                      </Button>
+                    </div>
+                  )
+                }
+              ]}
+              rows={eventForm.invitations}
+            />
+          ) : (
+            <EmptyState title="No invitations" description="Team invitations for this event will appear here." />
           )}
         </Card>
 
@@ -809,11 +1362,11 @@ export default function RegistrationManagementPage() {
 
         <Modal
           open={createTeamOpen}
-          title="Create team"
-          description="Create a team for this event before inviting other participants."
-          onClose={() => setCreateTeamOpen(false)}
+          title={editingTeamId ? 'Edit team' : 'Create team'}
+          description={editingTeamId ? 'Update the team details for this event.' : 'Create a team for this event before inviting other participants.'}
+          onClose={() => { setCreateTeamOpen(false); setEditingTeamId(null); }}
           onSubmit={submitCreateTeam}
-          submitLabel="Create team"
+          submitLabel={editingTeamId ? 'Save team' : 'Create team'}
           loading={teamActionLoading}
         >
           <ValidationMessages messages={teamFormErrors} />
@@ -865,7 +1418,7 @@ export default function RegistrationManagementPage() {
           <Button as={Link} variant="secondary" to={APP_ROUTES.events}>
             Events
           </Button>
-          <Button as={Link} to={`${APP_ROUTES.events}/1/register`}>
+          <Button as={Link} to={APP_ROUTES.events}>
             Register for an event
           </Button>
         </div>
@@ -897,7 +1450,9 @@ export default function RegistrationManagementPage() {
       </div>
 
       <Tabs items={WORKSPACE_TABS} activeKey={location.pathname.includes('/notifications') ? 'notifications' : location.pathname.includes('/teams') ? 'teams' : location.pathname.includes('/registrations/me') ? 'mine' : location.pathname.includes('/registrations') ? 'registrations' : 'overview'} onChange={key => {
-        const target = key === 'overview' ? APP_ROUTES.dashboard + '/registrations' : key === 'registrations' ? APP_ROUTES.dashboard + '/registrations' : key === 'mine' ? APP_ROUTES.dashboard + '/registrations' : key === 'teams' ? APP_ROUTES.dashboard + '/registrations' : APP_ROUTES.dashboard + '/registrations';
+        const target = key === 'notifications'
+          ? APP_ROUTES.dashboard + '/notifications'
+          : APP_ROUTES.dashboard + '/registrations';
         window.history.pushState({}, '', target);
         window.dispatchEvent(new PopStateEvent('popstate'));
       }} />
@@ -1020,7 +1575,7 @@ export default function RegistrationManagementPage() {
               title="No registrations yet"
               description="Register for an event to see your activity, approvals, and waitlist status here."
               actionLabel="Register for an event"
-              onAction={() => window.location.assign(`${APP_ROUTES.events}/1/register`)}
+              onAction={() => window.location.assign(APP_ROUTES.events)}
             />
           )}
         </Card>
@@ -1032,6 +1587,12 @@ export default function RegistrationManagementPage() {
             <div>
               <h2>Notifications</h2>
               <p>In-app messages for approvals, waitlist changes, and invitations.</p>
+            </div>
+            <div className="workspace-actions">
+              <Badge tone={unreadNotificationCount ? 'warning' : 'neutral'}>{unreadNotificationCount} unread</Badge>
+              <Button variant="secondary" size="sm" onClick={handleMarkAllRead} disabled={!unreadNotificationCount}>
+                Mark all read
+              </Button>
             </div>
           </div>
           {notificationsLoading ? (
@@ -1056,59 +1617,299 @@ export default function RegistrationManagementPage() {
           )}
         </Card>
 
-        <Card elevated className="workspace-table-card">
-          <div className="workspace-table-card__meta">
-            <div>
-              <h2>Teams</h2>
-              <p>Track the teams you manage or belong to.</p>
+        <div className="card-grid card-grid--two">
+          <Card elevated className="workspace-table-card">
+            <div className="workspace-table-card__meta">
+              <div>
+                <h2>My teams</h2>
+                <p>Choose a team to review its members, invitations, and registration state.</p>
+              </div>
+              <div className="workspace-actions">
+                <Button as={Link} variant="secondary" to={APP_ROUTES.events}>
+                  Open event form
+                </Button>
+              </div>
             </div>
-            <div className="workspace-actions">
-              <Button as={Link} variant="secondary" to={`${APP_ROUTES.events}/1/register`}>
-                Open event form
-              </Button>
+            {myTeamsLoading ? (
+              <LoadingSkeleton lines={4} />
+            ) : myTeamsError ? (
+              <ErrorState title="Teams unavailable" description={myTeamsError} onRetry={() => window.location.reload()} />
+            ) : myTeamRows.length ? (
+              <Table
+                columns={[
+                  {
+                    key: 'teamName',
+                    header: 'Team',
+                    render: row => (
+                      <div className="workspace-table-cell">
+                        <strong>{row.teamName}</strong>
+                        {selectedTeamId === row.id && <Badge tone="success">Selected</Badge>}
+                      </div>
+                    )
+                  },
+                  { key: 'eventTitle', header: 'Event', render: row => row.eventTitle },
+                  { key: 'memberCount', header: 'Members', render: row => row.memberCount },
+                  { key: 'status', header: 'Status', render: row => <StatusBadge status={row.status} /> },
+                  {
+                    key: 'actions',
+                    header: 'Actions',
+                    render: row => (
+                      <RowActionMenu
+                        items={[
+                          { label: 'View team', onClick: () => setSelectedTeamId(row.id) },
+                          { label: 'Invite member', onClick: () => { setSelectedTeamId(row.id); setActiveTeamId(row.id); setInviteOpen(true); } },
+                          { label: 'Edit name', onClick: () => openTeamEditor(row) },
+                          { label: 'Transfer ownership', onClick: () => openTeamTransfer(row) },
+                          { label: 'Leave team', onClick: () => requestTeamLeave(row) },
+                          { label: 'Delete team', tone: 'danger', onClick: () => requestTeamDelete(row) }
+                        ]}
+                      />
+                    )
+                  }
+                ]}
+                rows={myTeamRows}
+                emptyMessage="No teams are linked to your account yet."
+              />
+            ) : (
+              <EmptyState
+                title="No teams yet"
+                description="Create a team from an event registration page to manage members and invitations here."
+                actionLabel="Open event form"
+                onAction={() => window.location.assign(APP_ROUTES.events)}
+              />
+            )}
+          </Card>
+
+          <Card elevated className="workspace-table-card">
+            <div className="workspace-table-card__meta">
+              <div>
+                <h2>Team details</h2>
+                <p>Review the selected team, its event context, and its registration state.</p>
+              </div>
             </div>
-          </div>
-          {teamsLoading ? (
-            <LoadingSkeleton lines={4} />
-          ) : teamsError ? (
-            <ErrorState title="Teams unavailable" description={teamsError} onRetry={() => window.location.reload()} />
-          ) : teams.length ? (
-            <Table
-              columns={[
-                { key: 'teamName', header: 'Team', render: row => row.teamName },
-                { key: 'leaderName', header: 'Leader', render: row => row.leaderName },
-                { key: 'memberCount', header: 'Members', render: row => row.memberCount },
-                { key: 'status', header: 'Status', render: row => <StatusBadge status={row.status} /> },
-                {
-                  key: 'actions',
-                  header: 'Actions',
-                  render: row => (
-                    <div className="workspace-actions">
-                      <Button variant="secondary" size="sm" onClick={() => { setActiveTeamId(row.id); setInviteOpen(true); }}>
-                        Invite
-                      </Button>
-                      <Button variant="secondary" size="sm" onClick={() => handleTeamOwnershipTransfer(row.id, row.leaderId)}>
-                        Transfer
-                      </Button>
-                    </div>
-                  )
-                }
-              ]}
-              rows={teams}
-            />
-          ) : (
-            <EmptyState title="No teams yet" description="Team registrations will appear here once your event allows them." />
-          )}
-        </Card>
+            {!selectedTeam ? (
+              <EmptyState
+                title="No team selected"
+                description="Select a team from the list to see the member roster and registration details."
+                actionLabel="Select first team"
+                onAction={() => setSelectedTeamId(myTeamRows[0]?.id ?? null)}
+              />
+            ) : (
+              <>
+                <div className="workspace-summary__grid">
+                  <div className="workspace-summary__item"><span>Team</span><strong>{selectedTeam.teamName}</strong></div>
+                  <div className="workspace-summary__item"><span>Leader</span><strong>{selectedTeam.leaderName}</strong></div>
+                  <div className="workspace-summary__item"><span>Members</span><strong>{selectedTeam.memberCount ?? 0}</strong></div>
+                  <div className="workspace-summary__item"><span>Status</span><strong><StatusBadge status={selectedTeam.status} /></strong></div>
+                </div>
+                {selectedTeamContextLoading ? (
+                  <LoadingSkeleton lines={3} />
+                ) : selectedTeamContextError ? (
+                  <ErrorBanner message={selectedTeamContextError} />
+                ) : selectedTeamContext ? (
+                  <div className="workspace-summary__grid">
+                    <div className="workspace-summary__item"><span>Event</span><strong>{selectedTeamContext.eventTitle}</strong></div>
+                    <div className="workspace-summary__item"><span>Registration</span><strong>{selectedTeamContext.registrationOpen ? 'Open' : 'Closed'}</strong></div>
+                    <div className="workspace-summary__item"><span>Seats remaining</span><strong>{selectedTeamContext.seatsRemaining ?? 'Open'}</strong></div>
+                    <div className="workspace-summary__item"><span>Max team size</span><strong>{selectedTeamContext.maximumTeamSize ?? '-'}</strong></div>
+                  </div>
+                ) : null}
+                <div className="workspace-footer">
+                  <span>Registration status</span>
+                  <p>
+                    {selectedTeamRegistration
+                      ? `${friendlyStatus(selectedTeamRegistration.status)}${selectedTeamRegistration.registrationNumber ? ` • ${selectedTeamRegistration.registrationNumber}` : ''}`
+                      : 'No registration record is linked to this team yet.'}
+                  </p>
+                </div>
+                <div className="workspace-actions">
+                  <Button variant="secondary" size="sm" onClick={() => { setActiveTeamId(selectedTeam.id); setInviteOpen(true); }}>
+                    Invite member
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={() => openTeamEditor(selectedTeam)}>
+                    Edit
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={() => openTeamTransfer(selectedTeam)}>
+                    Transfer
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={() => requestTeamLeave(selectedTeam)}>
+                    Leave
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={() => requestTeamDelete(selectedTeam)}>
+                    Delete
+                  </Button>
+                </div>
+              </>
+            )}
+          </Card>
+        </div>
+
+        <div className="card-grid card-grid--two">
+          <Card elevated className="workspace-table-card">
+            <div className="workspace-table-card__meta">
+              <div>
+                <h2>Team members</h2>
+                <p>Review the roster for the selected team and manage individual members.</p>
+              </div>
+            </div>
+            {selectedTeamMembersLoading ? (
+              <LoadingSkeleton lines={4} />
+            ) : selectedTeamMembersError ? (
+              <ErrorState title="Team members unavailable" description={selectedTeamMembersError} onRetry={() => refreshSelectedTeamDetails()} />
+            ) : selectedTeamMembers.length ? (
+              <Table
+                columns={[
+                  { key: 'userName', header: 'Member', render: row => <strong>{row.userName}</strong> },
+                  { key: 'role', header: 'Role', render: row => <Badge tone={row.role === 'LEADER' ? 'success' : 'neutral'}>{friendlyStatus(row.role)}</Badge> },
+                  { key: 'joinedAt', header: 'Joined', render: row => formatDateTime(row.joinedAt) },
+                  {
+                    key: 'actions',
+                    header: 'Actions',
+                    render: row => (
+                      <RowActionMenu
+                        items={[
+                          { label: 'Remove member', hidden: row.role === 'LEADER', tone: 'danger', onClick: () => requestTeamMemberRemoval(selectedTeam, row) },
+                          { label: 'Transfer ownership', hidden: row.role === 'LEADER', onClick: () => { setTeamTransferForm({ teamId: selectedTeam.id, newLeaderUserId: String(row.userId) }); setTeamTransferOpen(true); } }
+                        ]}
+                      />
+                    )
+                  }
+                ]}
+                rows={selectedTeamMembers}
+                emptyMessage="No members are listed for the selected team."
+              />
+            ) : (
+              <EmptyState title="No members yet" description="The team roster will appear once members are invited or registered." />
+            )}
+          </Card>
+
+          <Card elevated className="workspace-table-card">
+            <div className="workspace-table-card__meta">
+              <div>
+                <h2>Team invitations</h2>
+                <p>Track invitations sent from the selected team.</p>
+              </div>
+            </div>
+            {selectedTeamInvitationsLoading ? (
+              <LoadingSkeleton lines={4} />
+            ) : selectedTeamInvitationsError ? (
+              <ErrorState title="Team invitations unavailable" description={selectedTeamInvitationsError} onRetry={() => refreshSelectedTeamDetails()} />
+            ) : selectedTeamInvitations.length ? (
+              <Table
+                columns={[
+                  { key: 'invitedUserName', header: 'Invited participant', render: row => row.invitedUserName },
+                  { key: 'status', header: 'Status', render: row => <StatusBadge status={row.status} /> },
+                  { key: 'invitedAt', header: 'Invited', render: row => formatDateTime(row.invitedAt) },
+                  {
+                    key: 'actions',
+                    header: 'Actions',
+                    render: row => (
+                      <RowActionMenu
+                        items={[
+                          { label: 'Cancel invitation', hidden: row.status !== 'PENDING', tone: 'danger', onClick: () => requestInvitationCancel(row) }
+                        ]}
+                      />
+                    )
+                  }
+                ]}
+                rows={selectedTeamInvitations}
+                emptyMessage="No invitations have been sent from this team."
+              />
+            ) : (
+              <EmptyState title="No team invitations" description="Send invitations from the selected team when you want to expand the roster." />
+            )}
+          </Card>
+        </div>
+
+        <div className="card-grid card-grid--two">
+          <Card elevated className="workspace-table-card">
+            <div className="workspace-table-card__meta">
+              <div>
+                <h2>Pending invitations</h2>
+                <p>Respond to invitations you received from other teams.</p>
+              </div>
+            </div>
+            {myTeamInvitationsLoading ? (
+              <LoadingSkeleton lines={4} />
+            ) : myTeamInvitationsError ? (
+              <ErrorState title="Pending invitations unavailable" description={myTeamInvitationsError} onRetry={() => window.location.reload()} />
+            ) : myTeamInvitations.length ? (
+              <Table
+                columns={[
+                  { key: 'teamName', header: 'Team', render: row => row.teamName },
+                  { key: 'status', header: 'Status', render: row => <StatusBadge status={row.status} /> },
+                  { key: 'invitedAt', header: 'Invited', render: row => formatDateTime(row.invitedAt) },
+                  {
+                    key: 'actions',
+                    header: 'Actions',
+                    render: row => (
+                      <RowActionMenu
+                        items={[
+                          { label: 'Accept', hidden: row.status !== 'PENDING', onClick: () => handleInvitationResponse(row.id, true) },
+                          { label: 'Reject', hidden: row.status !== 'PENDING', tone: 'danger', onClick: () => handleInvitationResponse(row.id, false) }
+                        ]}
+                      />
+                    )
+                  }
+                ]}
+                rows={myTeamInvitations}
+                emptyMessage="You do not have any team invitations waiting for a response."
+              />
+            ) : (
+              <EmptyState title="No pending invitations" description="Team invitations sent to your account will appear here." />
+            )}
+          </Card>
+
+          <Card elevated className="workspace-table-card">
+            <div className="workspace-table-card__meta">
+              <div>
+                <h2>Team registration status</h2>
+                <p>See the linked registration record for the selected team.</p>
+              </div>
+            </div>
+            {selectedTeamRegistration ? (
+              <>
+                <div className="workspace-summary__grid">
+                  <div className="workspace-summary__item"><span>Registration #</span><strong>{selectedTeamRegistration.registrationNumber ?? '-'}</strong></div>
+                  <div className="workspace-summary__item"><span>Status</span><strong><StatusBadge status={selectedTeamRegistration.status} /></strong></div>
+                  <div className="workspace-summary__item"><span>Submitted</span><strong>{formatDateTime(selectedTeamRegistration.registrationDate)}</strong></div>
+                  <div className="workspace-summary__item"><span>Type</span><strong>{friendlyStatus(selectedTeamRegistration.registrationType)}</strong></div>
+                </div>
+                <div className="workspace-footer">
+                  <span>Next step</span>
+                  <p>
+                    {selectedTeamRegistration.status === 'APPROVED'
+                      ? 'The team registration is confirmed.'
+                      : selectedTeamRegistration.status === 'PENDING'
+                        ? 'The team is waiting for review.'
+                        : selectedTeamRegistration.status === 'WAITLISTED'
+                          ? 'The team is on the waitlist until a seat opens.'
+                          : 'This registration is no longer active.'}
+                  </p>
+                </div>
+                {selectedTeamRegistration.participantId === user?.id && selectedTeamRegistration.status !== 'CANCELLED' && (
+                  <div className="workspace-actions">
+                    <Button variant="secondary" size="sm" onClick={() => handleCancelRegistration(selectedTeamRegistration.id)}>
+                      Withdraw registration
+                    </Button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <EmptyState title="No team registration yet" description="Create or submit a team registration before status details appear here." />
+            )}
+          </Card>
+        </div>
+
       </div>
 
-      <Modal
+        <Modal
         open={createTeamOpen}
-        title="Create team"
-        description="Create a team workspace for the selected event."
-        onClose={() => setCreateTeamOpen(false)}
+        title={editingTeamId ? 'Edit team' : 'Create team'}
+        description={editingTeamId ? 'Update the team details for this event.' : 'Create a team workspace for the selected event.'}
+        onClose={() => { setCreateTeamOpen(false); setEditingTeamId(null); }}
         onSubmit={submitCreateTeam}
-        submitLabel="Create team"
+        submitLabel={editingTeamId ? 'Save team' : 'Create team'}
         loading={teamActionLoading}
       >
         <ValidationMessages messages={teamFormErrors} />
@@ -1129,6 +1930,40 @@ export default function RegistrationManagementPage() {
         <Input id="invite-user-id" label="User ID" value={inviteForm.invitedUserId} onChange={event => setInviteForm(current => ({ ...current, invitedUserId: event.target.value }))} />
         <Textarea id="invite-message" label="Message" value={inviteForm.message} onChange={event => setInviteForm(current => ({ ...current, message: event.target.value }))} rows={3} />
       </Modal>
+
+      <Modal
+        open={teamTransferOpen}
+        title="Transfer ownership"
+        description="Choose another team member to become the new leader."
+        onClose={() => { setTeamTransferOpen(false); setTeamTransferErrors([]); }}
+        onSubmit={submitTeamTransfer}
+        submitLabel="Transfer ownership"
+        loading={teamActionLoading}
+      >
+        <ValidationMessages messages={teamTransferErrors} />
+        <Select
+          id="team-transfer-user"
+          label="New leader"
+          value={teamTransferForm.newLeaderUserId}
+          onChange={event => setTeamTransferForm(current => ({ ...current, newLeaderUserId: event.target.value }))}
+        >
+          <option value="">Select a member</option>
+          {selectedTeamMembers
+            .filter(member => member.role !== 'LEADER')
+            .map(member => (
+              <option key={member.userId} value={member.userId}>{member.userName}</option>
+            ))}
+        </Select>
+      </Modal>
+
+      <Dialog
+        open={Boolean(teamConfirm)}
+        title={teamConfirm?.title ?? 'Confirm action'}
+        description={teamConfirm?.description ?? ''}
+        confirmLabel={teamConfirm?.confirmLabel ?? 'Continue'}
+        onClose={() => setTeamConfirm(null)}
+        onConfirm={confirmTeamAction}
+      />
 
       {toasts.map(toast => <Toast key={toast.id} message={toast.message} tone={toast.tone} />)}
     </div>

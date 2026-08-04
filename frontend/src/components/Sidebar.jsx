@@ -8,6 +8,14 @@ import { buildDisplayName, getPrimaryRole, getRoleDescription } from '../utils/a
 
 export default function Sidebar({ brand, items, collapsed = false, onNavigate, onClose, onLogout, user }) {
   const roleCode = getPrimaryRole(user);
+  const groups = items.reduce((acc, item) => {
+    const group = item.group ?? 'Workspace';
+    if (!acc.some(entry => entry.group === group)) {
+      acc.push({ group, items: [] });
+    }
+    acc.find(entry => entry.group === group).items.push(item);
+    return acc;
+  }, []);
 
   return (
     <aside className={classNames('sidebar', collapsed && 'sidebar--collapsed')}>
@@ -41,15 +49,22 @@ export default function Sidebar({ brand, items, collapsed = false, onNavigate, o
       </div>
 
       <nav className="sidebar__nav" aria-label="Primary">
-        {items.map(item => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) => classNames('sidebar__link', isActive && 'sidebar__link--active')}
-            onClick={onNavigate}
-          >
-            <span>{item.label}</span>
-          </NavLink>
+        {groups.map(group => (
+          <div key={group.group} className="sidebar__group">
+            <span className="sidebar__group-label">{group.group}</span>
+            <div className="sidebar__group-links">
+              {group.items.map(item => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  className={({ isActive }) => classNames('sidebar__link', isActive && 'sidebar__link--active')}
+                  onClick={onNavigate}
+                >
+                  <span>{item.label}</span>
+                </NavLink>
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
 

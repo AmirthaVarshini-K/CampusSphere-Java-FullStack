@@ -16,5 +16,7 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, Long> {
 
     Optional<TeamMember> findByTeam_IdAndUser_IdAndDeletedFalse(Long teamId, Long userId);
 
+    List<TeamMember> findByUser_IdAndDeletedFalseOrderByJoinedAtDesc(Long userId);
+
     long countByTeam_IdAndDeletedFalse(Long teamId);
 }

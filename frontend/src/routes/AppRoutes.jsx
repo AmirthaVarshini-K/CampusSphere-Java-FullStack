@@ -20,6 +20,7 @@ const DashboardPreviewPage = lazy(() => import('../pages/DashboardPreviewPage'))
 const InstitutionSetupPage = lazy(() => import('../pages/InstitutionSetupPage'));
 const EventManagementPage = lazy(() => import('../pages/EventManagementPage'));
 const RegistrationManagementPage = lazy(() => import('../pages/RegistrationManagementPage'));
+const NotificationCenterPage = lazy(() => import('../pages/NotificationCenterPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 
 function RouteLoader() {
@@ -57,6 +58,7 @@ export default function AppRoutes() {
             <Route path="institution-setup/*" element={<InstitutionSetupPage />} />
             <Route path="registrations" element={<RegistrationManagementPage />} />
             <Route path="registrations/*" element={<RegistrationManagementPage />} />
+            <Route path="notifications" element={<NotificationCenterPage />} />
             <Route path="events/:eventId/register" element={<RegistrationManagementPage />} />
             <Route path="events" element={<EventManagementPage />} />
             <Route path="events/*" element={<EventManagementPage />} />
