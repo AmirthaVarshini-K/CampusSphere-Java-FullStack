@@ -23,6 +23,11 @@ const DASHBOARD_TITLES = {
   '/dashboard/attendance/scanner': { breadcrumb: 'CampusSphere / Attendance', title: 'Attendance Scanner', description: 'Scan QR tokens or record manual attendance for active sessions.' },
   '/dashboard/attendance/history': { breadcrumb: 'CampusSphere / Attendance', title: 'Attendance History', description: 'Search attendance records and review the latest audit trail.' },
   '/dashboard/attendance/reports': { breadcrumb: 'CampusSphere / Attendance', title: 'Attendance Reports', description: 'Export attendance summaries and certificate readiness views.' },
+  '/dashboard/certificates': { breadcrumb: 'CampusSphere / Certificates', title: 'Certificates', description: 'Issue, verify, and manage certificate templates and records.' },
+  '/dashboard/certificates/templates': { breadcrumb: 'CampusSphere / Certificates', title: 'Certificate Templates', description: 'Design and maintain the reusable layouts used for generation.' },
+  '/dashboard/certificates/generated': { breadcrumb: 'CampusSphere / Certificates', title: 'Generated Certificates', description: 'Review issued certificates, downloads, and verification history.' },
+  '/dashboard/certificates/settings': { breadcrumb: 'CampusSphere / Certificates', title: 'Certificate Settings', description: 'Review verification settings and supported generation variables.' },
+  '/dashboard/certificates/verify': { breadcrumb: 'CampusSphere / Certificates', title: 'Certificate Verification', description: 'Validate a token or review the public verification experience.' },
   '/dashboard/events/register': { breadcrumb: 'CampusSphere / Registrations', title: 'Event Registration', description: 'Complete a focused registration flow for the selected event.' }
 };
 
@@ -82,6 +87,7 @@ export default function DashboardLayout() {
   const isSidebarVisible = isMobile ? isSidebarOpen : true;
   const canSeeInstitutionSetup = ['SUPER_ADMIN', 'INSTITUTION_ADMIN', 'ADMINISTRATOR'].includes(roleCode);
   const canSeeEvents = canSeeInstitutionSetup || roleCode === 'FACULTY_COORDINATOR';
+  const canSeeCertificates = canSeeInstitutionSetup || roleCode === 'FACULTY_COORDINATOR';
   const canSeeRegistrations = true;
   const canSeeAttendance = true;
   const sidebarItems = DASHBOARD_NAV_ITEMS.filter(item => {
@@ -96,6 +102,9 @@ export default function DashboardLayout() {
     }
     if (item.label === 'Attendance') {
       return canSeeAttendance;
+    }
+    if (item.label === 'Certificates') {
+      return canSeeCertificates;
     }
     return true;
   });

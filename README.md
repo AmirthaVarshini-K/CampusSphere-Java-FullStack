@@ -76,6 +76,23 @@ cd backend
 ./mvnw.cmd spring-boot:run
 ```
 
+### Run Backend in Local Development Mode
+
+The recommended local profile uses a persistent file-based H2 database so development accounts survive backend restarts.
+
+```powershell
+cd backend
+.\mvnw.cmd -Dspring-boot.run.profiles=local spring-boot:run
+```
+
+Local development credentials:
+
+- Admin: `admin@campussphere.local` / `Admin@Local123!`
+- Faculty: `coordinator@campussphere.local` / `Faculty@Local123!`
+- Student: `student@campussphere.local` / `Student@Local123!`
+
+The local student account also supports login with register number `24CSE0001`.
+
 ### Build Backend
 
 ```bash
@@ -159,6 +176,7 @@ The schema uses surrogate primary keys, foreign keys, unique constraints, audit 
 - If the database password is invalid, update `DB_USERNAME` and `DB_PASSWORD`.
 - If CORS fails, verify `CORS_ALLOWED_ORIGINS` includes the frontend origin.
 - If the JWT secret is missing, provide `JWT_SECRET`.
+- If local developer accounts disappear after restart, make sure the backend is started with the `local` Spring profile rather than the default in-memory profile.
 - If a migration fails, clear the local test database and rerun the migrations from a clean state.
 - If Node modules are missing, run `npm install` inside `frontend/`.
 - If the browser console shows a blank page, check for failed asset loads or JavaScript syntax errors in the built bundle.

@@ -22,6 +22,8 @@ const EventManagementPage = lazy(() => import('../pages/EventManagementPage'));
 const RegistrationManagementPage = lazy(() => import('../pages/RegistrationManagementPage'));
 const AttendanceManagementPage = lazy(() => import('../pages/AttendanceManagementPage'));
 const NotificationCenterPage = lazy(() => import('../pages/NotificationCenterPage'));
+const CertificateManagementPage = lazy(() => import('../pages/CertificateManagementPage'));
+const CertificateVerificationPage = lazy(() => import('../pages/CertificateVerificationPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 
 function RouteLoader() {
@@ -40,6 +42,7 @@ export default function AppRoutes() {
           <Route path={APP_ROUTES.home} element={<PlatformLandingPage />} />
           <Route path={APP_ROUTES.unauthorized} element={<UnauthorizedPage />} />
           <Route path={APP_ROUTES.accessDenied} element={<AccessDeniedPage />} />
+          <Route path={APP_ROUTES.certificatePublicVerify} element={<CertificateVerificationPage />} />
           <Route path="/404" element={<NotFoundPage />} />
         </Route>
         <Route element={<AuthLayout />}>
@@ -62,6 +65,11 @@ export default function AppRoutes() {
             <Route path="attendance" element={<AttendanceManagementPage />} />
             <Route path="attendance/*" element={<AttendanceManagementPage />} />
             <Route path="notifications" element={<NotificationCenterPage />} />
+            <Route path="certificates" element={<CertificateManagementPage />} />
+            <Route path="certificates/templates" element={<CertificateManagementPage />} />
+            <Route path="certificates/generated" element={<CertificateManagementPage />} />
+            <Route path="certificates/settings" element={<CertificateManagementPage />} />
+            <Route path="certificates/verify" element={<CertificateVerificationPage />} />
             <Route path="events/:eventId/register" element={<RegistrationManagementPage />} />
             <Route path="events" element={<EventManagementPage />} />
             <Route path="events/*" element={<EventManagementPage />} />

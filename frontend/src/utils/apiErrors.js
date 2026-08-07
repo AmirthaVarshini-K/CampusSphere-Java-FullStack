@@ -14,12 +14,17 @@ export function extractValidationMessages(error) {
 }
 
 export function getApiErrorMessage(error, fallback = 'Something went wrong. Please try again.') {
+  const validationMessages = extractValidationMessages(error);
+  if (validationMessages.length > 0 || error?.response?.data?.message === 'Validation failed.') {
+    return 'Please fix the highlighted fields below.';
+  }
+
   if (error?.response?.data?.message) {
     return error.response.data.message;
   }
 
   if (isNetworkError(error)) {
-    return 'CampusSphere cannot reach the backend right now. Please try again once the server is available.';
+    return 'CampusSphere services are currently unavailable. Please try again shortly.';
   }
 
   return fallback;

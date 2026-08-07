@@ -16,5 +16,6 @@ export const DASHBOARD_NAV_ITEMS = [
   { label: 'Events', path: `${APP_ROUTES.dashboard}/events`, group: 'Operations', icon: 'calendar' },
   { label: 'Registrations', path: APP_ROUTES.registrations, group: 'Operations', icon: 'users' },
   { label: 'Attendance', path: APP_ROUTES.attendance, group: 'Operations', icon: 'clock' },
+  { label: 'Certificates', path: APP_ROUTES.certificates, group: 'Operations', icon: 'award' },
   { label: 'Notifications', path: `${APP_ROUTES.dashboard}/notifications`, group: 'Support', icon: 'bell' }
 ];

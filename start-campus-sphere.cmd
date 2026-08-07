@@ -33,7 +33,7 @@ echo [CampusSphere] Frontend URL: http://localhost:5173
 echo [CampusSphere] Do not open frontend\index.html with Live Server.
 echo [CampusSphere] Starting separate windows...
 
-start "CampusSphere Backend" cmd /k "cd /d \"%ROOT%backend\" && call mvnw.cmd spring-boot:run"
+start "CampusSphere Backend" cmd /k "cd /d \"%ROOT%backend\" && call mvnw.cmd -Dspring-boot.run.profiles=local spring-boot:run"
 start "CampusSphere Frontend" cmd /k "cd /d \"%ROOT%frontend\" && if not exist node_modules (call npm install) && call npm run dev"
 
 popd >nul

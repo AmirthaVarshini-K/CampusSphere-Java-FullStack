@@ -10,6 +10,7 @@ public class ApplicationProperties {
     private final Security security = new Security();
     private final Auth auth = new Auth();
     private final Seed seed = new Seed();
+    private String frontendBaseUrl;
 
     public String getAppName() {
         return appName;
@@ -33,6 +34,14 @@ public class ApplicationProperties {
 
     public Seed getSeed() {
         return seed;
+    }
+
+    public String getFrontendBaseUrl() {
+        return frontendBaseUrl;
+    }
+
+    public void setFrontendBaseUrl(String frontendBaseUrl) {
+        this.frontendBaseUrl = frontendBaseUrl;
     }
 
     public static class Cors {

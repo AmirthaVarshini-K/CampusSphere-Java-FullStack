@@ -16,6 +16,8 @@ public final class SecurityConstants {
             "/api/auth/reset-password",
             "/auth/refresh-token",
             "/api/auth/refresh-token"
+            ,
+            "/api/certificates/verify/**"
     };
 
     private SecurityConstants() {

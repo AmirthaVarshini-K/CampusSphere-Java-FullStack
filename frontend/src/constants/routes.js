@@ -14,5 +14,11 @@ export const APP_ROUTES = {
   attendance: '/dashboard/attendance',
   attendanceScanner: '/dashboard/attendance/scanner',
   attendanceHistory: '/dashboard/attendance/history',
-  attendanceReports: '/dashboard/attendance/reports'
+  attendanceReports: '/dashboard/attendance/reports',
+  certificates: '/dashboard/certificates',
+  certificateTemplates: '/dashboard/certificates/templates',
+  certificateGenerated: '/dashboard/certificates/generated',
+  certificateSettings: '/dashboard/certificates/settings',
+  certificateVerification: '/dashboard/certificates/verify',
+  certificatePublicVerify: '/verify/:token'
 };

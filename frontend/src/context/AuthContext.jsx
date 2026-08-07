@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { authApi } from '../services/authApi';
 import { userApi } from '../services/userApi';
-import { clearSession, readSession, writeSession } from '../services/session';
+import { clearSession, readSession, setSessionNotice, writeSession } from '../services/session';
 import { getApiErrorMessage } from '../utils/apiErrors';
 
 const AuthContext = createContext(null);
@@ -52,6 +52,7 @@ export function AuthProvider({ children }) {
           return;
         }
 
+        setSessionNotice('Your session has expired. Please sign in again.');
         clearSession();
         setSession(null);
         console.warn(getApiErrorMessage(error, 'Unable to restore the active session.'));

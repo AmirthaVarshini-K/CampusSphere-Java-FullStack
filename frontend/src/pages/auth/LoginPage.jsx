@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AuthCard from '../../components/AuthCard';
 import Button from '../../components/Button';
@@ -9,6 +9,7 @@ import { ErrorBanner, SuccessBanner } from '../../components/Banner';
 import { APP_ROUTES } from '../../constants/routes';
 import { authApi } from '../../services/authApi';
 import { useAuth } from '../../context/AuthContext';
+import { consumeSessionNotice } from '../../services/session';
 import { extractValidationMessages, getApiErrorMessage } from '../../utils/apiErrors';
 import { getDashboardRoute } from '../../utils/auth';
 
@@ -29,6 +30,13 @@ export default function LoginPage() {
   const [validationMessages, setValidationMessages] = useState([]);
 
   const targetPath = location.state?.from ?? getDashboardRoute();
+
+  useEffect(() => {
+    const notice = consumeSessionNotice();
+    if (notice) {
+      setErrorMessage(notice);
+    }
+  }, []);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -78,7 +86,7 @@ export default function LoginPage() {
             onChange={event => setForm(current => ({ ...current, identifier: event.target.value }))}
             autoComplete="username"
             inputMode="email"
-            placeholder="admin@campusphere.edu"
+            placeholder="admin@campussphere.local"
           />
           <span className="field__help">Use the identifier issued by your institution. Passwords stay out of plain text at every step.</span>
         </label>
