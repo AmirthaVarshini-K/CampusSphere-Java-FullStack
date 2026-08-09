@@ -28,6 +28,8 @@ const DASHBOARD_TITLES = {
   '/dashboard/certificates/generated': { breadcrumb: 'CampusSphere / Certificates', title: 'Generated Certificates', description: 'Review issued certificates, downloads, and verification history.' },
   '/dashboard/certificates/settings': { breadcrumb: 'CampusSphere / Certificates', title: 'Certificate Settings', description: 'Review verification settings and supported generation variables.' },
   '/dashboard/certificates/verify': { breadcrumb: 'CampusSphere / Certificates', title: 'Certificate Verification', description: 'Validate a token or review the public verification experience.' },
+  '/dashboard/analytics': { breadcrumb: 'CampusSphere / Analytics', title: 'Analytics', description: 'Real participation, attendance, and certificate insights from the current institution.' },
+  '/dashboard/reports': { breadcrumb: 'CampusSphere / Reports', title: 'Reports', description: 'Focused operational reports with real data and export support.' },
   '/dashboard/events/register': { breadcrumb: 'CampusSphere / Registrations', title: 'Event Registration', description: 'Complete a focused registration flow for the selected event.' }
 };
 
@@ -71,6 +73,8 @@ export default function DashboardLayout() {
     ? (location.pathname.includes('/register') ? DASHBOARD_TITLES['/dashboard/events/register'] : DASHBOARD_TITLES['/dashboard/events'])
     : location.pathname.startsWith('/dashboard/notifications')
       ? DASHBOARD_TITLES['/dashboard/notifications']
+    : location.pathname.startsWith('/dashboard/reports')
+      ? DASHBOARD_TITLES['/dashboard/reports']
     : location.pathname.startsWith('/dashboard/attendance')
       ? (location.pathname.includes('/scanner')
         ? DASHBOARD_TITLES['/dashboard/attendance/scanner']
@@ -88,6 +92,8 @@ export default function DashboardLayout() {
   const canSeeInstitutionSetup = ['SUPER_ADMIN', 'INSTITUTION_ADMIN', 'ADMINISTRATOR'].includes(roleCode);
   const canSeeEvents = canSeeInstitutionSetup || roleCode === 'FACULTY_COORDINATOR';
   const canSeeCertificates = canSeeInstitutionSetup || roleCode === 'FACULTY_COORDINATOR';
+  const canSeeAnalytics = true;
+  const canSeeReports = roleCode !== 'STUDENT';
   const canSeeRegistrations = true;
   const canSeeAttendance = true;
   const sidebarItems = DASHBOARD_NAV_ITEMS.filter(item => {
@@ -103,10 +109,30 @@ export default function DashboardLayout() {
     if (item.label === 'Attendance') {
       return canSeeAttendance;
     }
+    if (item.label === 'Analytics') {
+      return canSeeAnalytics;
+    }
+    if (item.label === 'Reports') {
+      return canSeeReports;
+    }
     if (item.label === 'Certificates') {
       return canSeeCertificates;
     }
     return true;
+  }).map(item => {
+    if (item.label === 'Analytics') {
+      return {
+        ...item,
+        label: roleCode === 'STUDENT' ? 'My Activity' : roleCode === 'FACULTY_COORDINATOR' ? 'My Analytics' : 'Analytics'
+      };
+    }
+    if (item.label === 'Reports') {
+      return {
+        ...item,
+        label: roleCode === 'FACULTY_COORDINATOR' ? 'Insights' : 'Reports'
+      };
+    }
+    return item;
   });
 
   async function handleLogout() {
@@ -146,3 +172,6 @@ export default function DashboardLayout() {
     </div>
   );
 }
+
+
+

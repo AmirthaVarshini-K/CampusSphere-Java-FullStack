@@ -14,6 +14,32 @@ const ICONS = {
       <path d="M3 9h18" />
     </>
   ),
+  chart: (
+    <>
+      <path d="M4 19V5" />
+      <path d="M4 19h16" />
+      <path d="M8 16V11" />
+      <path d="M12 16V8" />
+      <path d="M16 16v-6" />
+    </>
+  ),
+  pieChart: (
+    <>
+      <path d="M12 3a9 9 0 1 0 9 9h-9z" />
+      <path d="M12 3v9h9" />
+    </>
+  ),
+  filter: (
+    <path d="M4 6h16l-6 7v5l-4 2v-7z" />
+  ),
+  refresh: (
+    <>
+      <path d="M20 12a8 8 0 0 1-13.4 5.9" />
+      <path d="M4 12a8 8 0 0 1 13.4-5.9" />
+      <path d="M4 4v4h4" />
+      <path d="M20 20v-4h-4" />
+    </>
+  ),
   users: (
     <>
       <path d="M17 20c0-3-2.5-5-5-5s-5 2-5 5" />

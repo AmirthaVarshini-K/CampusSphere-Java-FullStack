@@ -12,6 +12,7 @@ import SectionHeading from '../components/SectionHeading';
 import Timeline from '../components/Timeline';
 import { APP_ROUTES } from '../constants/routes';
 import { useAuth } from '../context/AuthContext';
+import { analyticsApi } from '../services/analyticsApi';
 import { buildDisplayName, getPrimaryRole, getRoleDescription, getRoleLabel } from '../utils/auth';
 import { getApiErrorMessage } from '../utils/apiErrors';
 
@@ -40,6 +41,21 @@ export default function DashboardShellPage() {
   const [profile, setProfile] = useState(sessionUser);
   const [refreshing, setRefreshing] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [analyticsSnapshot, setAnalyticsSnapshot] = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [analyticsError, setAnalyticsError] = useState('');
+  const currentProfile = profile ?? sessionUser;
+  const roleCode = getPrimaryRole(currentProfile);
+  const roleLabel = getRoleLabel(roleCode);
+  const completion = useMemo(() => calculateCompletion(currentProfile), [currentProfile]);
+  const roleDescription = getRoleDescription(roleCode);
+  const displayProfile = currentProfile ?? {
+    fullName: 'Current session',
+    email: 'Profile is loading',
+    roles: [{ code: roleCode }],
+    status: 'Loading',
+    profilePictureUrl: null
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -70,18 +86,42 @@ export default function DashboardShellPage() {
     };
   }, [refreshCurrentUser, sessionUser]);
 
-  const currentProfile = profile ?? sessionUser;
-  const roleCode = getPrimaryRole(currentProfile);
-  const roleLabel = getRoleLabel(roleCode);
-  const completion = useMemo(() => calculateCompletion(currentProfile), [currentProfile]);
-  const roleDescription = getRoleDescription(roleCode);
-  const displayProfile = currentProfile ?? {
-    fullName: 'Current session',
-    email: 'Profile is loading',
-    roles: [{ code: roleCode }],
-    status: 'Loading',
-    profilePictureUrl: null
-  };
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadAnalytics() {
+      if (!currentProfile) {
+        if (mounted) {
+          setAnalyticsLoading(false);
+        }
+        return;
+      }
+
+      setAnalyticsLoading(true);
+      setAnalyticsError('');
+      try {
+        const response = await analyticsApi.getOverview();
+        if (mounted) {
+          setAnalyticsSnapshot(response?.data?.data ?? null);
+        }
+      } catch (error) {
+        if (mounted) {
+          setAnalyticsSnapshot(null);
+          setAnalyticsError(getApiErrorMessage(error, 'Unable to load live analytics right now.'));
+        }
+      } finally {
+        if (mounted) {
+          setAnalyticsLoading(false);
+        }
+      }
+    }
+
+    loadAnalytics();
+
+    return () => {
+      mounted = false;
+    };
+  }, [currentProfile, roleCode]);
 
   return (
     <div className="dashboard-home">
@@ -121,6 +161,25 @@ export default function DashboardShellPage() {
         {overviewMetrics.map(metric => (
           <MetricCard key={metric.label} {...metric} />
         ))}
+      </section>
+
+      <section className="dashboard-home__analytics">
+        <SectionHeading
+          eyebrow="Live analytics"
+          title="Real database activity at a glance."
+          description="These cards are populated from the current role scope and remain honest when the backend has little or no activity."
+          action={analyticsError ? <Badge tone="warning">Using fallback summary</Badge> : analyticsLoading ? <Badge tone="neutral">Loading live data</Badge> : <Badge tone="success">{analyticsSnapshot?.scopeLabel ?? 'Current scope'}</Badge>}
+        />
+        <div className="dashboard-home__analytics-grid">
+          {(analyticsSnapshot?.metrics?.length ? analyticsSnapshot.metrics.slice(0, 4) : [
+            { label: 'Events', value: '—', detail: 'Waiting for the database to return live scope data.', tone: 'neutral' },
+            { label: 'Registrations', value: '—', detail: 'Waiting for the database to return live scope data.', tone: 'neutral' },
+            { label: 'Attendance', value: '—', detail: 'Waiting for the database to return live scope data.', tone: 'neutral' },
+            { label: 'Certificates', value: '—', detail: 'Waiting for the database to return live scope data.', tone: 'neutral' }
+          ]).map(metric => (
+            <MetricCard key={metric.key ?? metric.label} {...metric} />
+          ))}
+        </div>
       </section>
 
       <section className="dashboard-home__grid">
@@ -210,3 +269,4 @@ function calculateCompletion(profile) {
   const filled = fields.filter(field => String(profile[field] ?? '').trim().length > 0).length;
   return Math.round((filled / fields.length) * 100);
 }
+

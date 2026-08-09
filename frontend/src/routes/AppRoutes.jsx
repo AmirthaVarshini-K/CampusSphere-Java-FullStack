@@ -24,6 +24,7 @@ const AttendanceManagementPage = lazy(() => import('../pages/AttendanceManagemen
 const NotificationCenterPage = lazy(() => import('../pages/NotificationCenterPage'));
 const CertificateManagementPage = lazy(() => import('../pages/CertificateManagementPage'));
 const CertificateVerificationPage = lazy(() => import('../pages/CertificateVerificationPage'));
+const AnalyticsPage = lazy(() => import('../pages/AnalyticsPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 
 function RouteLoader() {
@@ -70,6 +71,10 @@ export default function AppRoutes() {
             <Route path="certificates/generated" element={<CertificateManagementPage />} />
             <Route path="certificates/settings" element={<CertificateManagementPage />} />
             <Route path="certificates/verify" element={<CertificateVerificationPage />} />
+            <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="analytics/*" element={<AnalyticsPage />} />
+            <Route path="reports" element={<AnalyticsPage />} />
+            <Route path="reports/*" element={<AnalyticsPage />} />
             <Route path="events/:eventId/register" element={<RegistrationManagementPage />} />
             <Route path="events" element={<EventManagementPage />} />
             <Route path="events/*" element={<EventManagementPage />} />

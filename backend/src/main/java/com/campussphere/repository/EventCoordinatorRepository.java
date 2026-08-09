@@ -11,6 +11,10 @@ public interface EventCoordinatorRepository extends JpaRepository<EventCoordinat
 
     List<EventCoordinator> findByEvent_IdAndDeletedFalse(Long eventId);
 
+    List<EventCoordinator> findByEvent_Institution_IdAndDeletedFalse(Long institutionId);
+
+    List<EventCoordinator> findByUser_IdAndDeletedFalse(Long userId);
+
     Optional<EventCoordinator> findByIdAndDeletedFalse(Long id);
 
     boolean existsByEvent_IdAndUser_IdAndDeletedFalse(Long eventId, Long userId);

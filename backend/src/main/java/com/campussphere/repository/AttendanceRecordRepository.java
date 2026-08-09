@@ -13,6 +13,9 @@ public interface AttendanceRecordRepository extends JpaRepository<AttendanceReco
     @EntityGraph(attributePaths = {"institution", "event", "eventSession", "attendanceSession", "registration", "participant", "checkedInBy", "qrToken"})
     Optional<AttendanceRecord> findByIdAndDeletedFalse(Long id);
 
+    @EntityGraph(attributePaths = {"institution", "event", "eventSession", "attendanceSession", "registration", "participant", "checkedInBy", "qrToken"})
+    List<AttendanceRecord> findByInstitution_IdAndDeletedFalse(Long institutionId);
+
     List<AttendanceRecord> findByEvent_IdAndDeletedFalseOrderByCheckInTimeDesc(Long eventId);
 
     List<AttendanceRecord> findByAttendanceSession_IdAndDeletedFalseOrderByCheckInTimeDesc(Long attendanceSessionId);
@@ -30,4 +33,6 @@ public interface AttendanceRecordRepository extends JpaRepository<AttendanceReco
     long countByAttendanceSession_IdAndAttendanceStatusAndDeletedFalse(Long attendanceSessionId, AttendanceStatus attendanceStatus);
 
     long countByEvent_Institution_IdAndDeletedFalse(Long institutionId);
+
+    long countByInstitution_IdAndDeletedFalse(Long institutionId);
 }

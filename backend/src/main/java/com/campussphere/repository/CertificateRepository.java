@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface CertificateRepository extends JpaRepository<Certificate, Long>, JpaSpecificationExecutor<Certificate> {
@@ -16,6 +17,12 @@ public interface CertificateRepository extends JpaRepository<Certificate, Long>,
 
     @EntityGraph(attributePaths = {"institution", "issueBy", "recipientUser", "event", "session", "academicYear", "template", "revokedBy"})
     Optional<Certificate> findByVerificationTokenAndDeletedFalse(String verificationToken);
+
+    @EntityGraph(attributePaths = {"institution", "issueBy", "recipientUser", "event", "session", "academicYear", "template", "revokedBy"})
+    List<Certificate> findByInstitution_IdAndDeletedFalse(Long institutionId);
+
+    @EntityGraph(attributePaths = {"institution", "issueBy", "recipientUser", "event", "session", "academicYear", "template", "revokedBy"})
+    List<Certificate> findByRecipientUser_IdAndDeletedFalseOrderByGeneratedAtDesc(Long recipientUserId);
 
     boolean existsByInstitution_IdAndCertificateNumberIgnoreCaseAndDeletedFalse(Long institutionId, String certificateNumber);
 

@@ -13,8 +13,12 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
     @EntityGraph(attributePaths = {"institution", "event", "participant", "approvedBy", "team"})
     Optional<EventRegistration> findByIdAndDeletedFalse(Long id);
 
+    @EntityGraph(attributePaths = {"institution", "event", "participant", "approvedBy", "team"})
+    List<EventRegistration> findByInstitution_IdAndDeletedFalse(Long institutionId);
+
     List<EventRegistration> findByParticipant_IdAndDeletedFalseOrderByRegistrationDateDesc(Long participantId);
 
+    @EntityGraph(attributePaths = {"institution", "event", "participant", "approvedBy", "team"})
     List<EventRegistration> findByEvent_IdAndDeletedFalseOrderByRegistrationDateDesc(Long eventId);
 
     List<EventRegistration> findByEvent_IdAndParticipant_IdAndDeletedFalse(Long eventId, Long participantId);
@@ -26,4 +30,6 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
     long countByEvent_IdAndRegistrationStatusAndDeletedFalse(Long eventId, RegistrationStatus registrationStatus);
 
     long countByEvent_Institution_IdAndDeletedFalse(Long institutionId);
+
+    long countByInstitution_IdAndDeletedFalse(Long institutionId);
 }
