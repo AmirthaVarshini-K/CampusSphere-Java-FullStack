@@ -935,6 +935,7 @@
   display: grid;
   gap: 1rem;
   padding: 1.2rem;
+  min-height: 100%;
 }
 
 .dashboard-home__hero-panel-head {
@@ -954,6 +955,7 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
+  align-items: stretch;
 }
 
 .dashboard-home__grid {
@@ -970,6 +972,8 @@
 .dashboard-home__board {
   display: grid;
   gap: 1rem;
+  align-content: start;
+  min-height: 100%;
 }
 
 .dashboard-home__board--wide {
@@ -980,7 +984,7 @@
   display: grid;
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
   gap: 1rem;
-  align-items: start;
+  align-items: stretch;
 }
 
 .dashboard-home__stack {
@@ -1052,6 +1056,14 @@
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+.dashboard-home__identity .profile-card {
+  min-height: 100%;
+}
+
+.dashboard-home .metric-card {
+  min-height: 100%;
 }
 
 .site-footer {

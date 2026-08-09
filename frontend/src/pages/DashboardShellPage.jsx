@@ -5,7 +5,6 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import EmptyState from '../components/EmptyState';
 import ErrorState from '../components/ErrorState';
-import LoadingSkeleton from '../components/LoadingSkeleton';
 import MetricCard from '../components/MetricCard';
 import ProfileCard from '../components/ProfileCard';
 import RoleBadge from '../components/RoleBadge';
@@ -39,14 +38,13 @@ const quickActions = [
 export default function DashboardShellPage() {
   const { user: sessionUser, refreshCurrentUser } = useAuth();
   const [profile, setProfile] = useState(sessionUser);
-  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     let mounted = true;
 
     async function loadProfile() {
-      setLoading(true);
       setErrorMessage('');
       try {
         const freshProfile = await refreshCurrentUser();
@@ -60,7 +58,7 @@ export default function DashboardShellPage() {
         }
       } finally {
         if (mounted) {
-          setLoading(false);
+          setRefreshing(false);
         }
       }
     }
@@ -77,6 +75,13 @@ export default function DashboardShellPage() {
   const roleLabel = getRoleLabel(roleCode);
   const completion = useMemo(() => calculateCompletion(currentProfile), [currentProfile]);
   const roleDescription = getRoleDescription(roleCode);
+  const displayProfile = currentProfile ?? {
+    fullName: 'Current session',
+    email: 'Profile is loading',
+    roles: [{ code: roleCode }],
+    status: 'Loading',
+    profilePictureUrl: null
+  };
 
   return (
     <div className="dashboard-home">
@@ -101,10 +106,11 @@ export default function DashboardShellPage() {
               <Badge tone="neutral">Workspace health</Badge>
               <strong>Protected session active</strong>
             </div>
+            {refreshing && <Badge tone="neutral">Refreshing profile</Badge>}
             <RoleBadge role={roleCode} />
           </div>
           <div className="dashboard-home__identity">
-            <ProfileCard user={currentProfile} />
+            <ProfileCard user={displayProfile} />
           </div>
         </Card>
       </section>
@@ -124,25 +130,21 @@ export default function DashboardShellPage() {
             title="A compact overview of the current workspace."
             description="Use this space for activity, upcoming work, and the status of the signed-in role."
           />
-          {loading ? (
-            <LoadingSkeleton lines={5} />
-          ) : (
-            <div className="dashboard-home__board-grid">
-              <div className="dashboard-home__stack">
-                <div className="dashboard-home__callout">
-                  <span>Profile completion</span>
-                  <strong>{completion}%</strong>
-                  <p>The profile reads from the current session and remains honest when the backend is offline.</p>
-                </div>
-                <div className="dashboard-home__callout dashboard-home__callout--soft">
-                  <span>Role scope</span>
-                  <strong>{roleLabel}</strong>
-                  <p>{roleDescription}</p>
-                </div>
+          <div className="dashboard-home__board-grid">
+            <div className="dashboard-home__stack">
+              <div className="dashboard-home__callout">
+                <span>Profile completion</span>
+                <strong>{completion}%</strong>
+                <p>The profile reads from the current session and remains honest when the backend is offline.</p>
               </div>
-              <Timeline items={timelineItems} />
+              <div className="dashboard-home__callout dashboard-home__callout--soft">
+                <span>Role scope</span>
+                <strong>{roleLabel}</strong>
+                <p>{roleDescription}</p>
+              </div>
             </div>
-          )}
+            <Timeline items={timelineItems} />
+          </div>
         </Card>
 
         <div className="dashboard-home__column">
