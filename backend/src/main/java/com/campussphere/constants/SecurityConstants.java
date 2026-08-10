@@ -5,6 +5,7 @@ public final class SecurityConstants {
     public static final String[] PUBLIC_ENDPOINTS = {
             "/error",
             "/actuator/health",
+            "/api/health",
             "/v1/system/**",
             "/auth/login",
             "/api/auth/login",

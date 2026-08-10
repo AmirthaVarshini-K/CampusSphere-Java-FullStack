@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -42,6 +43,7 @@ import java.util.List;
 import java.util.Locale;
 
 @Component
+@Profile({"local", "dev", "test"})
 public class DataSeeder {
 
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
@@ -101,7 +103,7 @@ public class DataSeeder {
         Institution institution = seedInstitution();
         seedAdminUser();
         seedFacultyUser(institution);
-        if (isLocalDevelopmentProfile()) {
+        if (isDevelopmentDataProfile()) {
             seedLocalAcademicFoundation(institution);
             seedStudentUser(institution);
         }
@@ -337,10 +339,10 @@ public class DataSeeder {
         log.info("Seeded {} account: {}", roleCode, email);
     }
 
-    private boolean isLocalDevelopmentProfile() {
+    private boolean isDevelopmentDataProfile() {
         return List.of(environment.getActiveProfiles()).stream()
                 .map(profile -> profile == null ? "" : profile.trim().toLowerCase(Locale.ROOT))
-                .anyMatch(profile -> "local".equals(profile) || "dev".equals(profile));
+                .anyMatch(profile -> "local".equals(profile) || "dev".equals(profile) || "test".equals(profile));
     }
 
     private static final String LOCAL_STUDENT_EMAIL = "student@campussphere.local";

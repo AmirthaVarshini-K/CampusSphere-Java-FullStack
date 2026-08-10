@@ -34,7 +34,7 @@ campus-sphere:
   security:
     jwt:
       issuer: ${JWT_ISSUER:campussphere}
-      secret: ${JWT_SECRET:change-me-in-production}
+      secret: ${JWT_SECRET:}
       access-token-minutes: ${JWT_ACCESS_TOKEN_MINUTES:30}
       refresh-token-days: ${JWT_REFRESH_TOKEN_DAYS:14}
       reset-token-minutes: ${JWT_RESET_TOKEN_MINUTES:20}
@@ -50,5 +50,4 @@ campus-sphere:
 logging:
   level:
     root: INFO
-    com.campussphere: DEBUG
-    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+    com.campussphere: INFO
