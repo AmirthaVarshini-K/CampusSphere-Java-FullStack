@@ -101,7 +101,7 @@ export default function PlatformLandingPage() {
               <strong>Upcoming symposium</strong>
             </div>
             <span className="hero__showcase-status">
-              <Icon name="spark" size={14} />
+              <Icon name="calendar" size={14} />
               Registration open
             </span>
           </div>
@@ -224,7 +224,7 @@ export default function PlatformLandingPage() {
         <div className="quote-grid">
           {quotes.map(item => (
             <Card key={item.by} elevated className="quote-card">
-              <Icon name="spark" size={18} />
+              <Icon name="building" size={18} />
               <p>{item.quote}</p>
               <strong>{item.by}</strong>
             </Card>

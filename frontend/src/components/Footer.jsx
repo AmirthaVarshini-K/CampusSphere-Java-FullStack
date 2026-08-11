@@ -54,7 +54,7 @@ export default function Footer() {
 
       <div className="site-footer__meta">
         <span>
-          <Icon name="spark" size={14} />
+          <Icon name="building" size={14} />
           Enterprise foundation build
         </span>
         <p>Built for institutional event operations.</p>

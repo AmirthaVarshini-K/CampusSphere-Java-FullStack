@@ -26,7 +26,7 @@ export default function Sidebar({ brand, items, collapsed = false, onNavigate, o
     <aside className={classNames('app-sidebar', collapsed && 'app-sidebar--collapsed')}>
       <div className="app-sidebar__brand">
         <Link to={APP_ROUTES.dashboard} className="app-sidebar__brand-link" onClick={onNavigate}>
-          <BrandMark compact />
+          <BrandMark compact={collapsed} />
         </Link>
         {onClose && (
           <Button variant="secondary" size="sm" className="app-sidebar__close" onClick={onClose} aria-label="Close navigation">

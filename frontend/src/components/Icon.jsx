@@ -4,9 +4,6 @@ const ICONS = {
   home: (
     <path d="M4 11.5L12 5l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z" />
   ),
-  spark: (
-    <path d="M12 2.5 14.6 8l5.9 1-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.1 5.9-1z" />
-  ),
   calendar: (
     <>
       <path d="M6 3v3M18 3v3" />
@@ -169,7 +166,7 @@ const ICONS = {
 };
 
 export default function Icon({ name, size = 20, className = '' }) {
-  const content = ICONS[name] ?? ICONS.spark;
+  const content = ICONS[name] ?? ICONS.grid;
 
   return (
     <svg
