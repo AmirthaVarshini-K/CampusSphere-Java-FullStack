@@ -913,7 +913,7 @@ function EventListWorkspace({ catalogData, onOpenEvent, scopeInstitutionId, push
         <div>
           <p className="eyebrow">Event management</p>
           <h1>Plan events, manage sessions, and keep every college workflow in one place.</h1>
-          <p>CampusSphere keeps event setup institution-scoped, validated, and ready for publication without depending on hardcoded data.</p>
+          <p>Event setup stays institution-scoped and validated.</p>
           <div className="dashboard-page__hero-actions">
             <Button as={Link} to={`${BASE_PATH}/new`}>Create event</Button>
             <Button as={Link} variant="secondary" to={`${BASE_PATH}/categories`}>Manage categories</Button>

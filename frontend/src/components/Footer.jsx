@@ -36,7 +36,7 @@ export default function Footer() {
     <footer className="site-footer">
       <div className="site-footer__brand">
         <BrandMark compact />
-        <p>CampusSphere is built for colleges that want a calmer, more organised way to run events.</p>
+        <p>CampusSphere manages events, registrations, attendance, and certificates.</p>
       </div>
 
       {columns.map(column => (
@@ -57,7 +57,7 @@ export default function Footer() {
           <Icon name="spark" size={14} />
           Enterprise foundation build
         </span>
-        <p>Prepared for future event, registration, and analytics modules without redesigning the product.</p>
+        <p>Built for institutional event operations.</p>
       </div>
     </footer>
   );

@@ -11,26 +11,26 @@ import { registrationApi } from '../services/registrationApi';
 import { getPrimaryRole } from '../utils/auth';
 
 const DASHBOARD_TITLES = {
-  '/dashboard': { breadcrumb: 'CampusSphere / Dashboard', title: 'Dashboard', description: 'A calm workspace for the currently signed-in role.' },
-  '/dashboard/profile': { breadcrumb: 'CampusSphere / Profile', title: 'Profile', description: 'Review and complete the account details tied to your session.' },
-  '/dashboard/security': { breadcrumb: 'CampusSphere / Security', title: 'Security', description: 'Password and session controls prepared for the current build.' },
-  '/dashboard/activity': { breadcrumb: 'CampusSphere / Activity', title: 'Activity', description: 'Recent changes, logins, and workspace actions appear here.' },
-  '/dashboard/institution-setup': { breadcrumb: 'CampusSphere / Institution Setup', title: 'Institution Setup', description: 'Manage the master data that shapes the rest of the platform.' },
-  '/dashboard/events': { breadcrumb: 'CampusSphere / Events', title: 'Events', description: 'Organise symposiums, venues, sessions, and publication states.' },
-  '/dashboard/notifications': { breadcrumb: 'CampusSphere / Notifications', title: 'Notifications', description: 'Track approvals, invitations, and workspace updates in one place.' },
-  '/dashboard/registrations': { breadcrumb: 'CampusSphere / Registrations', title: 'Registrations', description: 'Review participant records, waitlists, and team workflows.' },
-  '/dashboard/attendance': { breadcrumb: 'CampusSphere / Attendance', title: 'Attendance', description: 'Check in participants, review history, and prepare reports.' },
-  '/dashboard/attendance/scanner': { breadcrumb: 'CampusSphere / Attendance', title: 'Attendance Scanner', description: 'Scan QR tokens or record manual attendance for active sessions.' },
-  '/dashboard/attendance/history': { breadcrumb: 'CampusSphere / Attendance', title: 'Attendance History', description: 'Search attendance records and review the latest audit trail.' },
-  '/dashboard/attendance/reports': { breadcrumb: 'CampusSphere / Attendance', title: 'Attendance Reports', description: 'Export attendance summaries and certificate readiness views.' },
-  '/dashboard/certificates': { breadcrumb: 'CampusSphere / Certificates', title: 'Certificates', description: 'Issue, verify, and manage certificate templates and records.' },
-  '/dashboard/certificates/templates': { breadcrumb: 'CampusSphere / Certificates', title: 'Certificate Templates', description: 'Design and maintain the reusable layouts used for generation.' },
-  '/dashboard/certificates/generated': { breadcrumb: 'CampusSphere / Certificates', title: 'Generated Certificates', description: 'Review issued certificates, downloads, and verification history.' },
-  '/dashboard/certificates/settings': { breadcrumb: 'CampusSphere / Certificates', title: 'Certificate Settings', description: 'Review verification settings and supported generation variables.' },
-  '/dashboard/certificates/verify': { breadcrumb: 'CampusSphere / Certificates', title: 'Certificate Verification', description: 'Validate a token or review the public verification experience.' },
-  '/dashboard/analytics': { breadcrumb: 'CampusSphere / Analytics', title: 'Analytics', description: 'Real participation, attendance, and certificate insights from the current institution.' },
-  '/dashboard/reports': { breadcrumb: 'CampusSphere / Reports', title: 'Reports', description: 'Focused operational reports with real data and export support.' },
-  '/dashboard/events/register': { breadcrumb: 'CampusSphere / Registrations', title: 'Event Registration', description: 'Complete a focused registration flow for the selected event.' }
+  '/dashboard': { breadcrumb: 'CampusSphere / Dashboard', title: 'Overview', description: 'Here’s what needs your attention today.' },
+  '/dashboard/profile': { breadcrumb: 'CampusSphere / Profile', title: 'Profile', description: 'Update the account details tied to your session.' },
+  '/dashboard/security': { breadcrumb: 'CampusSphere / Security', title: 'Security', description: 'Password and session controls.' },
+  '/dashboard/activity': { breadcrumb: 'CampusSphere / Activity', title: 'Activity', description: 'Recent logins and actions.' },
+  '/dashboard/institution-setup': { breadcrumb: 'CampusSphere / Institution Setup', title: 'Institution Setup', description: 'Maintain institutional master data.' },
+  '/dashboard/events': { breadcrumb: 'CampusSphere / Events', title: 'Events', description: 'Create and manage events.' },
+  '/dashboard/notifications': { breadcrumb: 'CampusSphere / Notifications', title: 'Notifications', description: 'Approvals, invitations, and updates.' },
+  '/dashboard/registrations': { breadcrumb: 'CampusSphere / Registrations', title: 'Registrations', description: 'Review participant records and team workflows.' },
+  '/dashboard/attendance': { breadcrumb: 'CampusSphere / Attendance', title: 'Attendance', description: 'Check in participants and review history.' },
+  '/dashboard/attendance/scanner': { breadcrumb: 'CampusSphere / Attendance', title: 'Attendance Scanner', description: 'Scan QR tokens or record attendance.' },
+  '/dashboard/attendance/history': { breadcrumb: 'CampusSphere / Attendance', title: 'Attendance History', description: 'Search attendance records.' },
+  '/dashboard/attendance/reports': { breadcrumb: 'CampusSphere / Attendance', title: 'Attendance Reports', description: 'Export attendance summaries.' },
+  '/dashboard/certificates': { breadcrumb: 'CampusSphere / Certificates', title: 'Certificates', description: 'Issue and manage certificates.' },
+  '/dashboard/certificates/templates': { breadcrumb: 'CampusSphere / Certificates', title: 'Certificate Templates', description: 'Design reusable layouts.' },
+  '/dashboard/certificates/generated': { breadcrumb: 'CampusSphere / Certificates', title: 'Generated Certificates', description: 'Review issued certificates.' },
+  '/dashboard/certificates/settings': { breadcrumb: 'CampusSphere / Certificates', title: 'Certificate Settings', description: 'Review verification settings.' },
+  '/dashboard/certificates/verify': { breadcrumb: 'CampusSphere / Certificates', title: 'Certificate Verification', description: 'Validate a token or review the public page.' },
+  '/dashboard/analytics': { breadcrumb: 'CampusSphere / Analytics', title: 'Analytics', description: 'Review participation, attendance, and certificates.' },
+  '/dashboard/reports': { breadcrumb: 'CampusSphere / Reports', title: 'Reports', description: 'Operational reports and exports.' },
+  '/dashboard/events/register': { breadcrumb: 'CampusSphere / Registrations', title: 'Event Registration', description: 'Complete the selected registration.' }
 };
 
 export default function DashboardLayout() {

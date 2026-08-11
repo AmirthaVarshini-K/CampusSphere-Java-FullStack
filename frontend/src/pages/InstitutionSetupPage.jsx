@@ -1580,7 +1580,7 @@ export default function InstitutionSetupPage() {
           <div>
             <Badge tone="neutral">Institution setup</Badge>
             <h1>Master data for every college.</h1>
-            <p>CampusSphere keeps institutional records, academic timelines, programme structure, and section setup in one scoped workspace.</p>
+            <p>Institution records, timelines, programmes, and sections stay scoped here.</p>
           </div>
           <div className="dashboard-page__hero-actions">
             <Badge tone="neutral">{currentScopeLabel}</Badge>
@@ -1801,7 +1801,7 @@ export default function InstitutionSetupPage() {
         <div>
           <Badge tone="neutral">Institution setup</Badge>
           <h1>Multi-college master data workspace</h1>
-          <p>CampusSphere keeps the institutional reference data for colleges, departments, programmes, semesters, and sections in one scoped admin flow.</p>
+          <p>Maintain colleges, departments, programmes, semesters, and sections.</p>
         </div>
         <div className="dashboard-page__hero-actions">
           <Badge tone={catalogError ? 'warning' : 'success'}>{catalogLoading ? 'Loading' : 'Ready'}</Badge>

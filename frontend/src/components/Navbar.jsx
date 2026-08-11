@@ -37,37 +37,37 @@ export default function Navbar({
       if (location.pathname.startsWith('/dashboard/events')) {
         return {
           breadcrumb: location.pathname.includes('/register') ? 'CampusSphere / Registrations' : 'CampusSphere / Events',
-          title: location.pathname.includes('/register') ? 'Event registration' : 'Events studio',
+          title: location.pathname.includes('/register') ? 'Event registration' : 'Events',
           description: location.pathname.includes('/register')
-            ? 'Keep the participant workflow focused and calm.'
-            : 'Manage event structure, coordination, and publication from one surface.'
+            ? 'Complete the selected registration.'
+            : 'Manage event structure, sessions, and publication.'
         };
       }
       if (location.pathname.startsWith('/dashboard/notifications')) {
         return {
           breadcrumb: 'CampusSphere / Notifications',
-          title: 'Notification centre',
-          description: 'A single place for approvals, invitations, and updates.'
+          title: 'Notifications',
+          description: 'Approvals, invitations, and updates.'
         };
       }
       if (location.pathname.startsWith('/dashboard/registrations')) {
         return {
           breadcrumb: 'CampusSphere / Registrations',
-          title: 'Registration workspace',
-          description: 'Review participant flows, teams, and queue states.'
+          title: 'Registrations',
+          description: 'Review participant records and queue states.'
         };
       }
       if (location.pathname.startsWith('/dashboard/institution-setup')) {
         return {
           breadcrumb: 'CampusSphere / Institution setup',
           title: 'Institution setup',
-          description: 'Maintain the college structure that powers the platform.'
+          description: 'Maintain institutional master data.'
         };
       }
       return {
-        breadcrumb: pageBreadcrumb ?? 'CampusSphere workspace',
+        breadcrumb: pageBreadcrumb ?? 'CampusSphere',
         title: pageTitle ?? 'Dashboard',
-        description: pageDescription ?? 'A focused workspace for the current role.'
+        description: pageDescription ?? 'Workspace for the current role.'
       };
     })();
 
@@ -99,7 +99,7 @@ export default function Navbar({
             <input
               type="search"
               placeholder="Search registrations, events, or students"
-              aria-label="Search the workspace"
+              aria-label="Search"
               onFocus={() => setSearchOpen(true)}
               onBlur={() => setSearchOpen(false)}
             />

@@ -24,9 +24,9 @@ const overviewMetrics = [
 ];
 
 const timelineItems = [
-  { title: 'Morning overview', description: 'Review active events, queues, and unresolved tasks in one scan.', icon: 'clock', tone: 'neutral', meta: 'Today' },
-  { title: 'Coordinator review', description: 'Pending approvals and publication steps sit in the same workspace.', icon: 'usersSquare', tone: 'neutral', meta: 'Pending' },
-  { title: 'Workspace status', description: 'The shell remains useful even when the backend returns no live data.', icon: 'shield', tone: 'success', meta: 'Ready' }
+  { title: 'Morning overview', description: 'Review active events, queues, and unresolved tasks.', icon: 'clock', tone: 'neutral', meta: 'Today' },
+  { title: 'Coordinator review', description: 'Pending approvals and publication steps are visible.', icon: 'usersSquare', tone: 'neutral', meta: 'Pending' },
+  { title: 'Workspace status', description: 'The shell stays usable even when live data is missing.', icon: 'shield', tone: 'success', meta: 'Ready' }
 ];
 
 const quickActions = [
@@ -128,8 +128,8 @@ export default function DashboardShellPage() {
       <section className="dashboard-home__hero">
         <div className="dashboard-home__hero-copy">
           <Badge tone="neutral">Dashboard</Badge>
-          <h1>{roleLabel} workspace</h1>
-          <p>{roleDescription}. This is the control centre for your current session, with honest empty states and clear actions.</p>
+          <h1>{roleLabel} overview</h1>
+          <p>{roleDescription}.</p>
           <div className="dashboard-home__hero-actions">
             <Button as={Link} to={`${APP_ROUTES.dashboard}/events`}>
               Open events
@@ -166,16 +166,16 @@ export default function DashboardShellPage() {
       <section className="dashboard-home__analytics">
         <SectionHeading
           eyebrow="Live analytics"
-          title="Real database activity at a glance."
-          description="These cards are populated from the current role scope and remain honest when the backend has little or no activity."
+          title="Current metrics"
+          description="Live data from the current scope."
           action={analyticsError ? <Badge tone="warning">Using fallback summary</Badge> : analyticsLoading ? <Badge tone="neutral">Loading live data</Badge> : <Badge tone="success">{analyticsSnapshot?.scopeLabel ?? 'Current scope'}</Badge>}
         />
         <div className="dashboard-home__analytics-grid">
           {(analyticsSnapshot?.metrics?.length ? analyticsSnapshot.metrics.slice(0, 4) : [
-            { label: 'Events', value: '—', detail: 'Waiting for the database to return live scope data.', tone: 'neutral' },
-            { label: 'Registrations', value: '—', detail: 'Waiting for the database to return live scope data.', tone: 'neutral' },
-            { label: 'Attendance', value: '—', detail: 'Waiting for the database to return live scope data.', tone: 'neutral' },
-            { label: 'Certificates', value: '—', detail: 'Waiting for the database to return live scope data.', tone: 'neutral' }
+            { label: 'Events', value: '-', detail: 'Waiting for live scope data.', tone: 'neutral' },
+            { label: 'Registrations', value: '-', detail: 'Waiting for live scope data.', tone: 'neutral' },
+            { label: 'Attendance', value: '-', detail: 'Waiting for live scope data.', tone: 'neutral' },
+            { label: 'Certificates', value: '-', detail: 'Waiting for live scope data.', tone: 'neutral' }
           ]).map(metric => (
             <MetricCard key={metric.key ?? metric.label} {...metric} />
           ))}
@@ -186,15 +186,15 @@ export default function DashboardShellPage() {
         <Card elevated className="dashboard-home__board dashboard-home__board--wide">
           <SectionHeading
             eyebrow="Today"
-            title="A compact overview of the current workspace."
-            description="Use this space for activity, upcoming work, and the status of the signed-in role."
+            title="Today"
+            description="Activity, upcoming work, and role status."
           />
           <div className="dashboard-home__board-grid">
             <div className="dashboard-home__stack">
               <div className="dashboard-home__callout">
                 <span>Profile completion</span>
                 <strong>{completion}%</strong>
-                <p>The profile reads from the current session and remains honest when the backend is offline.</p>
+                <p>The profile reads from the current session.</p>
               </div>
               <div className="dashboard-home__callout dashboard-home__callout--soft">
                 <span>Role scope</span>
@@ -208,7 +208,7 @@ export default function DashboardShellPage() {
 
         <div className="dashboard-home__column">
           <Card className="dashboard-home__board">
-            <SectionHeading eyebrow="Quick actions" title="Move straight to the right surface." />
+            <SectionHeading eyebrow="Quick actions" title="Quick actions" />
             <div className="dashboard-home__action-list">
               {quickActions.map(([label, to]) => (
                 <Button key={label} as={Link} variant="secondary" to={to}>
@@ -219,10 +219,10 @@ export default function DashboardShellPage() {
           </Card>
 
           <Card className="dashboard-home__board">
-            <SectionHeading eyebrow="Upcoming" title="No live activity yet." description="The empty state stays useful until the backend has real items to show." />
+            <SectionHeading eyebrow="Upcoming" title="No live activity yet." description="Real items appear here when available." />
             <EmptyState
               title="No upcoming registrations yet."
-              description="As event data arrives, this area will surface live items rather than fake counts."
+              description="Browse events when they are available."
               actionLabel="Browse events"
               onAction={() => window.location.assign(`${APP_ROUTES.dashboard}/events`)}
             />
@@ -232,11 +232,11 @@ export default function DashboardShellPage() {
 
       <section className="dashboard-home__grid dashboard-home__grid--secondary">
         <Card className="dashboard-home__board">
-          <SectionHeading eyebrow="Role state" title="What this workspace is ready for." />
+          <SectionHeading eyebrow="Role state" title="Ready for" />
           <ul className="dashboard-home__list">
             <li>Login, logout, and refresh flows are in place.</li>
             <li>Protected routes and institution-aware sections stay intact.</li>
-            <li>Future event, registration, and master-data pages can slot into the shell cleanly.</li>
+            <li>Event, registration, and master-data pages fit into the shell.</li>
           </ul>
         </Card>
 
@@ -269,4 +269,6 @@ function calculateCompletion(profile) {
   const filled = fields.filter(field => String(profile[field] ?? '').trim().length > 0).length;
   return Math.round((filled / fields.length) * 100);
 }
+
+
 

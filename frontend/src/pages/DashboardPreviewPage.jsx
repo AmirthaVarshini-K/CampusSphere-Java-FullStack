@@ -9,7 +9,7 @@ import Timeline from '../components/Timeline';
 import { APP_ROUTES } from '../constants/routes';
 
 const metrics = [
-  { label: 'Preview mode', value: 'Active', detail: 'Shows how the authenticated workspace reads.', tone: 'neutral' },
+  { label: 'Preview mode', value: 'Active', detail: 'Shows the authenticated shell.', tone: 'neutral' },
   { label: 'Role', value: 'Faculty', detail: 'Demo state for the shell and navigation.', tone: 'neutral' },
   { label: 'State', value: 'Ready', detail: 'No backend data is required to view this route.', tone: 'success' }
 ];
@@ -27,8 +27,8 @@ export default function DashboardPreviewPage() {
         <Card elevated>
           <BrandMark />
           <Badge tone="neutral">Dashboard preview</Badge>
-          <h1>Faculty coordinator workspace</h1>
-          <p>This route shows the authenticated shell without needing a live account. It mirrors the new product language.</p>
+          <h1>Faculty coordinator preview</h1>
+          <p>This route shows the authenticated shell without a live account.</p>
           <div className="dashboard-home__hero-actions">
             <Button as={Link} to={APP_ROUTES.home}>
               Back to public site

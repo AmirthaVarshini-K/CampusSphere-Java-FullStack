@@ -12,7 +12,7 @@ import { buildDisplayName, getPrimaryRole, getRoleDescription } from '../utils/a
 export default function Sidebar({ brand, items, collapsed = false, onNavigate, onClose, onLogout, user }) {
   const roleCode = getPrimaryRole(user);
   const groups = items.reduce((acc, item) => {
-    const group = item.group ?? 'Workspace';
+    const group = item.group ?? 'Main';
     let entry = acc.find(current => current.group === group);
     if (!entry) {
       entry = { group, items: [] };
@@ -71,7 +71,7 @@ export default function Sidebar({ brand, items, collapsed = false, onNavigate, o
       </nav>
 
       <div className="app-sidebar__panel">
-        <strong>Protected workspace</strong>
+        <strong>Protected access</strong>
         <p>All restricted actions remain behind JWT, institution scope, and role checks.</p>
       </div>
 

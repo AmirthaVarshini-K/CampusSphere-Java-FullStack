@@ -12,7 +12,7 @@ export default function AccessDeniedPage() {
         <BrandMark />
         <Badge tone="neutral">CampusSphere permissions</Badge>
         <h1>Access denied</h1>
-        <p>The current account does not have permission for this action. Ask an administrator if you believe this is incorrect.</p>
+        <p>You do not have permission to open this page.</p>
         <div className="state-page__actions">
           <Button as={Link} to={APP_ROUTES.dashboard}>
             Return to dashboard

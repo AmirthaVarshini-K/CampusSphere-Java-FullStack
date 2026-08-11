@@ -672,7 +672,7 @@ export default function AnalyticsPage() {
 
       <section className="analytics-grid">
         <Card elevated className="analytics-panel">
-          <SectionHeading eyebrow="Trend" title="Activity over time" description="The chart uses the actual filtered records for the active workspace." />
+          <SectionHeading eyebrow="Trend" title="Activity over time" description="The chart uses the active filtered records." />
           {overviewLoading && !overview ? <LoadingSkeleton lines={4} /> : <TrendChart points={trend} />}
         </Card>
 
@@ -712,7 +712,7 @@ export default function AnalyticsPage() {
       <Card elevated className="analytics-report">
         <div className="analytics-report__header">
           <SectionHeading
-            eyebrow={isStudent ? 'Personal insight' : 'Report workspace'}
+            eyebrow={isStudent ? 'Personal insight' : 'Reports'}
             title={currentReportTitle}
             description={selectedTab?.description ?? 'Choose a report section to inspect a live filtered dataset.'}
           />

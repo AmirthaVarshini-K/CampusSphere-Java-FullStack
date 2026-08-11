@@ -987,7 +987,7 @@ export default function RegistrationManagementPage() {
       type: 'delete',
       teamId: team.id,
       title: `Delete ${team.teamName}?`,
-      description: 'This will archive the team and remove its active roster from the workspace.',
+      description: 'This will archive the team and remove its active roster.',
       confirmLabel: 'Delete team'
     });
   }
@@ -1304,7 +1304,7 @@ export default function RegistrationManagementPage() {
           <div className="workspace-table-card__meta">
             <div>
               <h2>Pending invitations</h2>
-              <p>Track invitations for the current event and respond without leaving the workspace.</p>
+              <p>Track invitations for the current event.</p>
             </div>
           </div>
           {eventForm?.invitations?.length ? (
@@ -1906,7 +1906,7 @@ export default function RegistrationManagementPage() {
         <Modal
         open={createTeamOpen}
         title={editingTeamId ? 'Edit team' : 'Create team'}
-        description={editingTeamId ? 'Update the team details for this event.' : 'Create a team workspace for the selected event.'}
+        description={editingTeamId ? 'Update the team details for this event.' : 'Create a team for the selected event.'}
         onClose={() => { setCreateTeamOpen(false); setEditingTeamId(null); }}
         onSubmit={submitCreateTeam}
         submitLabel={editingTeamId ? 'Save team' : 'Create team'}

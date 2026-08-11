@@ -12,7 +12,7 @@ export default function NotFoundPage() {
         <BrandMark />
         <Badge tone="neutral">CampusSphere route</Badge>
         <h1>Page not found</h1>
-        <p>The route you requested is not available in this build. Use the links below to return to the product.</p>
+        <p>The page you requested is not available.</p>
         <div className="state-page__actions">
           <Button as={Link} to={APP_ROUTES.home}>
             Go to home

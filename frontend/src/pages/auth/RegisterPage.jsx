@@ -91,13 +91,13 @@ export default function RegisterPage() {
     <AuthCard
       title="Student registration"
       eyebrow="CampusSphere registration"
-      description="Create a new account with academic details and the password you will use to sign in."
+      description="Create a student account."
     >
       <SuccessBanner message={successMessage} />
       <ErrorBanner message={errorMessage} />
       <div className="progress-pill">Profile completion {completion}%</div>
       <form className="auth-form auth-form--stacked" onSubmit={handleSubmit} noValidate>
-        <FormSection title="Personal details" description="Match the name used in your official college records.">
+        <FormSection title="Personal details" description="Match the name in your college records.">
           <div className="grid grid--2">
             <label className="field" htmlFor="firstName">
               <span className="field__label">First name</span>
@@ -110,7 +110,7 @@ export default function RegisterPage() {
           </div>
         </FormSection>
 
-        <FormSection title="Academic information">
+        <FormSection title="Academic information" description="Enter your academic details.">
           <div className="grid grid--3">
             <label className="field" htmlFor="registerNumber">
               <span className="field__label">Register number</span>
@@ -155,7 +155,7 @@ export default function RegisterPage() {
           </div>
         </FormSection>
 
-        <FormSection title="Contact information">
+        <FormSection title="Contact information" description="Add your contact details.">
           <div className="grid grid--2">
             <label className="field" htmlFor="email">
               <span className="field__label">Email</span>
@@ -168,7 +168,7 @@ export default function RegisterPage() {
           </div>
         </FormSection>
 
-        <FormSection title="Account information">
+        <FormSection title="Account information" description="Set your password.">
           <div className="grid grid--2">
             <PasswordInput
               id="password"
@@ -196,7 +196,7 @@ export default function RegisterPage() {
         <ValidationMessages messages={validationMessages} />
 
         <div className="auth-card__subnote">
-          <span className="field__help">Use the same email and register number your college has on file.</span>
+          <span className="field__help">Use the email and register number on file with your college.</span>
         </div>
 
         <LoadingButton loading={loading} type="submit" fullWidth>

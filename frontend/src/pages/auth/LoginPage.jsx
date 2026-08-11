@@ -71,7 +71,7 @@ export default function LoginPage() {
     <AuthCard
       title="Sign in"
       eyebrow="CampusSphere sign in"
-      description="Use your email, student register number, or employee ID to access your CampusSphere workspace."
+      description="Use your login identifier and password."
     >
       <SuccessBanner message={successMessage} />
       <ErrorBanner message={errorMessage} />
@@ -88,14 +88,14 @@ export default function LoginPage() {
             inputMode="email"
             placeholder="admin@campussphere.local"
           />
-          <span className="field__help">Use the identifier issued by your institution. Passwords stay out of plain text at every step.</span>
+          <span className="field__help">Use the identifier issued by your institution.</span>
         </label>
         <PasswordInput
           id="password"
           name="password"
           value={form.password}
           onChange={event => setForm(current => ({ ...current, password: event.target.value }))}
-          helperText="Passwords are encrypted and never stored in plain text."
+          helperText="Enter your password."
         />
         <label className="checkbox">
           <input

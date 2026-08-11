@@ -8,12 +8,12 @@ import Timeline from '../components/Timeline';
 const pillars = [
   { label: 'Secure entry', value: 'JWT-ready', detail: 'Login, recovery, and protected routes share one session model.', tone: 'neutral' },
   { label: 'Role routing', value: 'Role aware', detail: 'Administrators, organisers, faculty, and students keep separate paths.', tone: 'neutral' },
-  { label: 'Offline-safe', value: 'Public first', detail: 'Landing and auth pages remain visible even when the backend is unavailable.', tone: 'success' }
+  { label: 'Offline-safe', value: 'Public first', detail: 'Public pages remain visible when the backend is unavailable.', tone: 'success' }
 ];
 
 const steps = [
-  { title: 'Sign in', description: 'Use email, register number, or employee ID to access the workspace.', icon: 'shield', tone: 'neutral' },
-  { title: 'Review profile', description: 'Complete profile details before event and registration workflows unlock.', icon: 'usersSquare', tone: 'neutral' },
+  { title: 'Sign in', description: 'Use email, register number, or employee ID.', icon: 'shield', tone: 'neutral' },
+  { title: 'Review profile', description: 'Complete profile details before continuing.', icon: 'usersSquare', tone: 'neutral' },
   { title: 'Continue safely', description: 'Password reset, session refresh, and protected routes stay consistent.', icon: 'clock', tone: 'success' }
 ];
 
@@ -30,12 +30,9 @@ export default function AuthLayout() {
         </div>
 
         <div className="auth-shell__hero">
-          <p className="auth-shell__eyebrow">Built for colleges, organisers, and students</p>
-          <h1>One signed-in workspace for every event journey.</h1>
-          <p>
-            CampusSphere keeps authentication, onboarding, and future event workflows aligned so the experience feels like
-            part of a single product instead of a detached form stack.
-          </p>
+          <p className="auth-shell__eyebrow">CampusSphere access</p>
+          <h1>Event & Symposium Management</h1>
+          <p>Manage events, registrations, attendance, and certificates.</p>
         </div>
 
         <div className="auth-shell__metrics">
@@ -48,7 +45,7 @@ export default function AuthLayout() {
           <div className="auth-shell__board-head">
             <div>
               <Badge tone="neutral">Access path</Badge>
-              <h2>What happens after sign-in</h2>
+              <h2>After sign-in</h2>
             </div>
             <Badge tone="success">Protected</Badge>
           </div>

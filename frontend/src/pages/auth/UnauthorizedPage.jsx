@@ -12,7 +12,7 @@ export default function UnauthorizedPage() {
         <BrandMark />
         <Badge tone="neutral">CampusSphere access</Badge>
         <h1>Unauthorized</h1>
-        <p>You need to sign in before continuing. Your session may have expired or may not be available yet.</p>
+        <p>Sign in to continue.</p>
         <div className="state-page__actions">
           <Button as={Link} to={APP_ROUTES.login}>
             Sign in

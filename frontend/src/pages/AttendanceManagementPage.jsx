@@ -653,7 +653,7 @@ export default function AttendanceManagementPage() {
           <Badge tone="neutral">Attendance</Badge>
           <h1>Check in participants with clarity, speed, and a clean audit trail.</h1>
           <p>
-            Scan QR tokens, record manual attendance, review history, and export reports from one workspace. The data
+            Scan QR tokens, record manual attendance, review history, and export reports. The data
             shown here stays scoped to the authenticated institution and role.
           </p>
           <div className="attendance-hero__actions">
@@ -671,7 +671,7 @@ export default function AttendanceManagementPage() {
             <Badge tone={dashboard?.liveCheckIns ? 'success' : 'neutral'}>{dashboard?.liveCheckIns ?? 0} live</Badge>
           </div>
           <div className="attendance-hero__panel-copy">
-            <p>{selectedEvent ? `Attendance data is filtered to ${selectedEvent.title}.` : 'No event is selected, so the workspace is showing the current institution scope.'}</p>
+            <p>{selectedEvent ? `Attendance data is filtered to ${selectedEvent.title}.` : 'No event is selected, so the current institution scope is shown.'}</p>
             <div className="attendance-hero__selector">
               <Select id="attendance-event-scope" label="Event scope" value={selectedEventId} onChange={event => setEventFilter(event.target.value)}>
                 <option value="">Institution wide</option>
