@@ -43,7 +43,7 @@ import java.util.List;
 import java.util.Locale;
 
 @Component
-@Profile({"local", "dev", "test"})
+@Profile({"local", "dev", "test", "mysql-demo"})
 public class DataSeeder {
 
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
@@ -189,7 +189,7 @@ public class DataSeeder {
                 "Coordinator",
                 RoleCode.FACULTY_COORDINATOR,
                 institution,
-                "FAC-1001",
+                resolveFacultyEmployeeId(),
                 "Computer Science",
                 null,
                 null,
@@ -342,7 +342,15 @@ public class DataSeeder {
     private boolean isDevelopmentDataProfile() {
         return List.of(environment.getActiveProfiles()).stream()
                 .map(profile -> profile == null ? "" : profile.trim().toLowerCase(Locale.ROOT))
-                .anyMatch(profile -> "local".equals(profile) || "dev".equals(profile) || "test".equals(profile));
+                .anyMatch(profile -> "local".equals(profile) || "dev".equals(profile) || "test".equals(profile) || "mysql-demo".equals(profile));
+    }
+
+    private String resolveFacultyEmployeeId() {
+        return List.of(environment.getActiveProfiles()).stream()
+                .map(profile -> profile == null ? "" : profile.trim().toLowerCase(Locale.ROOT))
+                .anyMatch("mysql-demo"::equals)
+                ? "FAC-1001"
+                : "FAC-2001";
     }
 
     private static final String LOCAL_STUDENT_EMAIL = "student@campussphere.local";
